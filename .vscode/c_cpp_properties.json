@@ -4,6 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
+                "C:/Users/chedr/OneDrive/Desktop/Materias de la U/Requerimientos de software/Proyecto1_LP-Codigo-/include",
                 "C:/Program Files/MySQL/MySQL Server 8.0/include",  // Ajusta esta ruta
                 "C:/mingw64/include"  // Ajusta si usas MinGW
             ],
