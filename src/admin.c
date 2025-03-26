@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <commdlg.h>
 #include "admin.h"
+#include "procedimientosBD.h"
 
 void menuAdministrativo() {
     int opcion;
