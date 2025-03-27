@@ -91,11 +91,7 @@ char* abrirExploradorArchivos() {
 }
 
 
-// auxiliar para la base de datos
-void insertarFamilia(char *id, char *descripcion) {
-    // Imprime los datos por el momento
-    printf("Información de la Familia: ID = %s, Descripción = %s\n", id, descripcion);
-}
+
 
 void registrarFamiliaProductos() {
     char *rutaArchivo;  
@@ -126,10 +122,8 @@ void registrarFamiliaProductos() {
             id = strdup(token);  
             token = strtok(NULL, ",");  
             if (token != NULL) {
-                descripcion = strdup(token);  
-
-               
-                insertarFamilia(id, descripcion);
+                descripcion = strdup(token);
+                insertarFamiliaBD(id, descripcion);
             } else {
                 printf("Error: Formato incorrecto en la línea: %s\n", linea);
             }

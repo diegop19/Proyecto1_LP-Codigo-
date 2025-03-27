@@ -1,5 +1,5 @@
 USE bazardb;
-
+DROP PROCEDURE IF EXISTS insertarFamilia;
 DELIMITER $$
 
 CREATE PROCEDURE insertarFamilia(

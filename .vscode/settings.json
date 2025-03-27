@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "general.h": "c",
-        "privadoBD.h": "c"
+        "privadoBD.h": "c",
+        "procedimientosbd.h": "c"
     }
 }

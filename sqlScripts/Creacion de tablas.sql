@@ -6,7 +6,7 @@ CREATE TABLE PERSONA(
 );
 CREATE TABLE FAMILIAPRODUCTO(
 	identificadorFamilia VARCHAR(100) primary KEY,
-    descripcionFamila VARCHAR(200)
+    descripcionFamilia VARCHAR(200)
 );
 CREATE TABLE PRODUCTO(
 	identificadorProducto VARCHAR(100) PRIMARY KEY,

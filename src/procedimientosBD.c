@@ -1,6 +1,8 @@
-#include <stdlib.h>
 #include "privadoBD.h"
 #include "procedimientosBD.h"
+#include <stdlib.h>
+#include <stdio.h>
+
 int conectar(MYSQL **conexion){
     int error;
     *conexion = mysql_init(NULL);
@@ -13,15 +15,19 @@ int conectar(MYSQL **conexion){
     }
     return error;
 }
-void insertarFamilia(char* idFamilia, char* descripcion){
+void insertarFamiliaBD(char* idFamilia, char* descripcion){
       MYSQL *conexion;
       int error;
       error = conectar(&conexion);
       MYSQL_BIND bind[2];
       if(!error){
             MYSQL_STMT *stmt;
-            const char* consulta = "CALL insertar_producto(?,?,?,?,?,?)";
+            const char* consulta = "CALL insertarFamilia(?,?)";
             stmt = mysql_stmt_init(conexion);
+            if(mysql_stmt_prepare(stmt, consulta, strlen(consulta))){
+                  printf("Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
+            }
+            
             memset(bind, 0, sizeof(bind));
             bind[0].buffer_type = MYSQL_TYPE_STRING;
             bind[0].buffer = idFamilia;
@@ -32,27 +38,24 @@ void insertarFamilia(char* idFamilia, char* descripcion){
             bind[1].buffer_length = sizeof(descripcion);
             
             if(mysql_stmt_bind_param(stmt, bind) != 0){
-                  printf("Ocurrio un error \n");
-                  mysql_stmt_close(stmt);
-                  mysql_close(conexion);
+                  printf("Error al vincular parámetros: %s\n", mysql_stmt_error(stmt));
             }
             if(mysql_stmt_execute(stmt) != 0){
-                  printf("Ocurrio un error al ejecutar el procedimiento \n");
-                  mysql_stmt_close(stmt);
-                  mysql_close(conexion);
+                  printf("Error al ejecutar el procedimiento: %s\n", mysql_stmt_error(stmt));
       
             }else{
                   printf("Producto agregado exitosamente\n");
-                  mysql_stmt_close(stmt);
-                  mysql_close(conexion);
+                  
             }
+            mysql_stmt_close(stmt);
+            mysql_close(conexion);
       }
       
 
 
 }
 
-void insertarProducto(char *id, char *nombre, char *familia, float costo, float precio, int cantidad_stock){
+void insertarProductoBD(char *id, char *nombre, char *familia, float costo, float precio, int cantidad_stock){
       MYSQL *conexion;
       int error;
       error = conectar(&conexion);
@@ -83,7 +86,7 @@ void insertarProducto(char *id, char *nombre, char *familia, float costo, float 
             bind[4].buffer_length = sizeof(precio);
 
             bind[5].buffer_type = MYSQL_TYPE_LONG;
-            bind[5].buffer = (char *)cantidad_stock;
+            bind[5].buffer = &cantidad_stock;
             bind[5].buffer_length = sizeof(cantidad_stock);
 
             if(mysql_stmt_bind_param(stmt, bind) != 0){
