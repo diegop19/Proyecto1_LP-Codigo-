@@ -217,10 +217,6 @@ void eliminarProducto(){
 
 }
 
-void actualizarStock(char *id, int cantidad) {
-    printf("Actualizando stock: ID = %s, Cantidad = %d\n", id, cantidad);
-}
-
 void cargarInventario() {
     char *rutaArchivo;  
     FILE *archivo;      

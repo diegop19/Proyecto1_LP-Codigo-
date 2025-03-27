@@ -114,3 +114,44 @@ void insertarProductoBD(char *id, char *nombre, char *familia, double costo, dou
         }
 
 }
+
+void actualizarStock(char* id, int cantidad){
+      MYSQL *conexion;
+      int error;
+      error = conectar(&conexion);
+      MYSQL_BIND bind[2];
+      if(!error){
+            MYSQL_STMT *stmt;
+            const char* consulta = "CALL actualizarCantidadProducto(?,?)";
+            stmt = mysql_stmt_init(conexion);
+            if(mysql_stmt_prepare(stmt, consulta, strlen(consulta))){
+                  printf("Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
+            }
+            memset(bind, 0, sizeof(bind));
+            
+            bind[0].buffer_type = MYSQL_TYPE_STRING;
+            bind[0].buffer = id;
+            bind[0].buffer_length = sizeof(id);
+
+            bind[1].buffer_type = MYSQL_TYPE_LONG;
+            bind[1].buffer = &cantidad;
+
+            if(mysql_stmt_bind_param(stmt, bind) != 0){
+                  printf("Error al vincular parámetros: %s\n", mysql_stmt_error(stmt));
+                  mysql_stmt_close(stmt);
+                  mysql_close(conexion);
+            }
+            if(mysql_stmt_execute(stmt) != 0){
+                  printf("Error al ejecutar el procedimiento: %s\n", mysql_stmt_error(stmt));
+                  mysql_stmt_close(stmt);
+                  mysql_close(conexion);
+
+            }else{
+                  printf("Producto agregado exitosamente\n");
+                  mysql_stmt_close(stmt);
+                  mysql_close(conexion);
+            }
+
+      }
+
+}

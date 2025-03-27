@@ -2,6 +2,7 @@
     "files.associations": {
         "general.h": "c",
         "privadoBD.h": "c",
-        "procedimientosbd.h": "c"
+        "procedimientosbd.h": "c",
+        "stdio.h": "c"
     }
 }
