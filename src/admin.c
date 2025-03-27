@@ -170,8 +170,8 @@ void registrarProductos() {
         char *id = NULL;
         char *nombre = NULL;
         char *familia = NULL;
-        float costo = 0.0;
-        float precio = 0.0;
+        double costo = 0.0;
+        double precio = 0.0;
         int cantidad_stock = 0;
 
         // Procesar la línea: separar los campos
@@ -194,7 +194,7 @@ void registrarProductos() {
                             if (token != NULL) {
                                 cantidad_stock = atoi(token);  
 
-                                insertarProducto(id, nombre, familia, costo, precio, cantidad_stock);
+                                insertarProductoBD(id, nombre, familia, costo, precio, cantidad_stock);
                             }
                         }
                     }
