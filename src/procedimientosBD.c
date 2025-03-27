@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 int conectar(MYSQL **conexion){
     int error;
     *conexion = mysql_init(NULL);
@@ -164,3 +165,80 @@ void actualizarStockBD(char* id, int cantidad){
 
       }
 }
+
+void desplegarProductos(){
+      MYSQL *conexion;
+      MYSQL_RES *resultado;
+      MYSQL_ROW fila;
+      int error;
+      error = conectar(&conexion);
+      if(!error){
+            if (mysql_query(conexion, "CALL obtenerProductos()")) {
+                  fprintf(stderr, "Error al llamar al procedimiento: %s\n", mysql_error(conexion));
+                  mysql_close(conexion);
+                  return;
+            }
+            resultado = mysql_store_result(conexion);
+            MYSQL_FIELD *campos;
+            unsigned int num_campos = mysql_num_fields(resultado);
+            campos = mysql_fetch_fields(resultado);
+            printf("\n=== LISTADO COMPLETO DE PRODUCTOS ===\n");
+            for (unsigned int i = 0; i < num_campos; i++) {
+                printf("%-35s", campos[i].name);
+            }
+            printf("\n");
+            while ((fila = mysql_fetch_row(resultado))) {
+                  for (unsigned int i = 0; i < num_campos; i++) {
+                      printf("%-35s", fila[i] ? fila[i] : "NULL");
+                  }
+                  printf("\n");
+            }
+            mysql_free_result(resultado);
+            while (mysql_next_result(conexion) == 0) {
+                  resultado = mysql_store_result(conexion);
+                  mysql_free_result(resultado);
+            }
+            mysql_close(conexion);
+
+      }
+}
+void filtrarBusqueda(char* identificador) {
+      MYSQL *conexion;
+      int error;
+      error = conectar(&conexion);
+      if(!error){
+            char query[256];
+            snprintf(query, sizeof(query), "CALL filtrarProductos('%s');", identificador);
+            if (mysql_query(conexion, query)) {
+                  fprintf(stderr, "Error al ejecutar la consulta: %s\n", mysql_error(conexion));
+                  mysql_close(conexion);
+                  exit(1);
+            }
+            MYSQL_RES *res = mysql_store_result(conexion);
+            if (res == NULL) {
+                  fprintf(stderr, "Error al obtener los resultados: %s\n", mysql_error(conexion));
+                  mysql_close(conexion);
+                  exit(1);
+            }
+            MYSQL_FIELD *campos;
+            unsigned int num_campos = mysql_num_fields(res);
+            campos = mysql_fetch_fields(res);
+            for (unsigned int i = 0; i < num_campos; i++) {
+                  printf("%-35s", campos[i].name); 
+            }
+            printf("\n");
+            for (unsigned int i = 0; i < num_campos; i++) {
+                  printf("%-35s", "--------------------");
+            }
+            printf("\n");
+            MYSQL_ROW row;
+            while ((row = mysql_fetch_row(res)) != NULL) {
+                  for (unsigned int i = 0; i < num_campos; i++) {
+                        printf("%-35s", row[i] ? row[i] : "NULL");
+                  }
+                  printf("\n");
+            }
+            mysql_free_result(res);
+            mysql_close(conexion);
+      }
+  }

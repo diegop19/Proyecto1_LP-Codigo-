@@ -8,4 +8,7 @@ void insertarProductoBD(char *id, char *nombre, char *familia, double costo, dou
 void insertarFamiliaBD(char* idFamilia, char* descripcion);
 int conectar(MYSQL **conexion);
 void actualizarStockBD(char* id, int cantidad);
+void desplegarProductos();
+void filtrarBusqueda(char* identificador);
+
 #endif
