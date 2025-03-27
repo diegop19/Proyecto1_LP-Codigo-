@@ -1,4 +1,5 @@
 USE bazardb;
+DROP PROCEDURE IF EXISTS filtrarProductos;
 DELIMITER $$
 
 CREATE PROCEDURE filtrarProductos(
@@ -20,9 +21,7 @@ BEGIN
             p.costo,
             p.precio,
             p.cantidadDisponible,
-            fp.identificadorFamilia,
-            (p.precio - p.costo) AS margen,
-            CONCAT(ROUND(((p.precio - p.costo)/p.costo)*100, 2), '%') AS margenPorcentaje
+            fp.identificadorFamilia
         FROM 
             PRODUCTO p
         JOIN 
