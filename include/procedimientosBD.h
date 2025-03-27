@@ -3,6 +3,6 @@
 #include <mysql.h>
 
 void insertarProducto(char *id, char *nombre, char *familia, float costo, float precio, int cantidad_stock);
-void insertarFamilia();
+void insertarFamilia(char* idFamilia, char* descripcion);
 int conectar(MYSQL **conexion);
 #endif

@@ -13,6 +13,44 @@ int conectar(MYSQL **conexion){
     }
     return error;
 }
+void insertarFamilia(char* idFamilia, char* descripcion){
+      MYSQL *conexion;
+      int error;
+      error = conectar(&conexion);
+      MYSQL_BIND bind[2];
+      if(!error){
+            MYSQL_STMT *stmt;
+            const char* consulta = "CALL insertar_producto(?,?,?,?,?,?)";
+            stmt = mysql_stmt_init(conexion);
+            memset(bind, 0, sizeof(bind));
+            bind[0].buffer_type = MYSQL_TYPE_STRING;
+            bind[0].buffer = idFamilia;
+            bind[0].buffer_length = sizeof(idFamilia);
+
+            bind[1].buffer_type = MYSQL_TYPE_STRING;
+            bind[1].buffer = descripcion;
+            bind[1].buffer_length = sizeof(descripcion);
+            
+            if(mysql_stmt_bind_param(stmt, bind) != 0){
+                  printf("Ocurrio un error \n");
+                  mysql_stmt_close(stmt);
+                  mysql_close(conexion);
+            }
+            if(mysql_stmt_execute(stmt) != 0){
+                  printf("Ocurrio un error al ejecutar el procedimiento \n");
+                  mysql_stmt_close(stmt);
+                  mysql_close(conexion);
+      
+            }else{
+                  printf("Producto agregado exitosamente\n");
+                  mysql_stmt_close(stmt);
+                  mysql_close(conexion);
+            }
+      }
+      
+
+
+}
 
 void insertarProducto(char *id, char *nombre, char *familia, float costo, float precio, int cantidad_stock){
       MYSQL *conexion;
