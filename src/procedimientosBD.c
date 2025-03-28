@@ -115,7 +115,7 @@ void insertarProductoBD(char *id, char *nombre, char *familia, double costo, dou
 
 }
 
-void actualizarStock(char* id, int cantidad){
+void actualizarStockBD(char* id, int cantidad){
       MYSQL *conexion;
       int error;
       error = conectar(&conexion);
@@ -123,6 +123,7 @@ void actualizarStock(char* id, int cantidad){
       if(!error){
             MYSQL_STMT *stmt;
             const char* consulta = "CALL actualizarCantidadProducto(?,?)";
+            
             stmt = mysql_stmt_init(conexion);
             if(mysql_stmt_prepare(stmt, consulta, strlen(consulta))){
                   printf("Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
@@ -131,7 +132,7 @@ void actualizarStock(char* id, int cantidad){
             
             bind[0].buffer_type = MYSQL_TYPE_STRING;
             bind[0].buffer = id;
-            bind[0].buffer_length = sizeof(id);
+            bind[0].buffer_length = strlen(id);
 
             bind[1].buffer_type = MYSQL_TYPE_LONG;
             bind[1].buffer = &cantidad;
@@ -142,16 +143,24 @@ void actualizarStock(char* id, int cantidad){
                   mysql_close(conexion);
             }
             if(mysql_stmt_execute(stmt) != 0){
-                  printf("Error al ejecutar el procedimiento: %s\n", mysql_stmt_error(stmt));
-                  mysql_stmt_close(stmt);
-                  mysql_close(conexion);
-
+                  unsigned int err_num = mysql_stmt_errno(stmt);
+                  const char* err_msg = mysql_stmt_error(stmt);
+            
+                  if(err_num == 1642) {  // Código para warnings (1642 = ER_SIGNAL_WARN)
+                        printf("ADVERTENCIA: %s\n", err_msg);
+                  } else {
+                        printf("ERROR: %s\n", err_msg);
+                  }
             }else{
-                  printf("Producto agregado exitosamente\n");
-                  mysql_stmt_close(stmt);
-                  mysql_close(conexion);
+                  printf("Stock actualizado correctamente.\n");
+                  const char* warning_msg = mysql_error(conexion);
+                  if(warning_msg && *warning_msg) {
+                      printf("ADVERTENCIA: %s\n", warning_msg);
+                  }
+            mysql_stmt_close(stmt);
+            mysql_close(conexion);
+
             }
 
       }
-
 }

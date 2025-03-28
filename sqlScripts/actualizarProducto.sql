@@ -1,3 +1,5 @@
+USE bazardb;
+DROP PROCEDURE IF EXISTS actualizarCantidadProducto;
 DELIMITER $$
 CREATE PROCEDURE actualizarCantidadProducto(
     IN p_identificadorProducto VARCHAR(100),
@@ -23,16 +25,17 @@ BEGIN
         SET nueva_cantidad = cantidad_actual + p_cantidadAumento;
         
         IF nueva_cantidad < 0 THEN
-            SET nueva_cantidad = 0;
-            SELECT CONCAT(
-                'Advertencia: No hay suficiente stock. ',
-                'La cantidad disponible se ha ajustado a 0.'
-            ) AS mensaje;
-        END IF;
+			UPDATE PRODUCTO
+            SET cantidadDisponible = 0
+            WHERE identificadorProducto = p_identificadorProducto;
+			SIGNAL SQLSTATE '01000'  -- Código para warning (no error)
+            SET MESSAGE_TEXT = 'Stock insuficiente. Se ajustó a 0.';
 
-        UPDATE PRODUCTO
-        SET cantidadDisponible = nueva_cantidad
-        WHERE identificadorProducto = p_identificadorProducto;
+       ELSE
+			UPDATE PRODUCTO
+			SET cantidadDisponible = nueva_cantidad
+			WHERE identificadorProducto = p_identificadorProducto;
+		END IF;
     END IF;
 END $$
 

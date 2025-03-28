@@ -245,7 +245,7 @@ void cargarInventario() {
             token = strtok(NULL, ",");  
             if (token != NULL) {
                 cantidad = atoi(token); 
-                actualizarStock(id, cantidad);
+                actualizarStockBD(id, cantidad);
             } else {
                 printf("Error: Formato incorrecto en la línea: %s\n", linea);
             }
