@@ -2,7 +2,7 @@
 #include "procedimientosBD.h"
 #include <stdlib.h>
 #include <stdio.h>
-
+#include "estructuras.h"
 
 int conectar(MYSQL **conexion){
     int error;
@@ -242,3 +242,70 @@ void filtrarBusqueda(char* identificador) {
             mysql_close(conexion);
       }
   }
+producto* obtenerProductoIndividual(char* codigo) {
+      producto productoEncontrado = {0};
+      MYSQL *conn;
+      MYSQL_STMT *stmt;
+      MYSQL_BIND bind[1];
+      MYSQL_RES *prepare_meta_result;
+      producto* p = NULL;
+      int error;
+      
+      error = conectar(&conn);
+      if(!error) {
+            stmt = mysql_stmt_init(conn);
+            const char* query = "CALL ObtenerProductoIndividual(?)";
+            if (mysql_stmt_prepare(stmt, query, strlen(query))) {
+                  fprintf(stderr, "Error al preparar el procedimiento: %s\n", mysql_error(conn));
+            }
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = (char*)codigo;
+    bind[0].buffer_length = strlen(codigo);
+
+    if (mysql_stmt_bind_param(stmt, bind)) {
+        fprintf(stderr, "Error al vincular los parámetros: %s\n", mysql_error(conn));
+    }
+
+    if (mysql_stmt_execute(stmt)) {
+        fprintf(stderr, "Error al ejecutar el procedimiento: %s\n", mysql_error(conn));
+    }
+
+    MYSQL_BIND result_bind[2];
+    char nombreProducto[255];
+    double precioProducto;
+
+    memset(result_bind, 0, sizeof(result_bind));
+    result_bind[0].buffer_type = MYSQL_TYPE_STRING;
+    result_bind[0].buffer = nombreProducto;
+    result_bind[0].buffer_length = sizeof(nombreProducto);
+
+    result_bind[1].buffer_type = MYSQL_TYPE_DOUBLE;
+    result_bind[1].buffer = &precioProducto;
+
+    if (mysql_stmt_bind_result(stmt, result_bind)) {
+        fprintf(stderr, "Error al vincular los resultados: %s\n", mysql_error(conn));
+    }
+
+    if (mysql_stmt_fetch(stmt) == 0) {
+        p = (producto*)malloc(sizeof(producto));
+        if (!p) {
+            fprintf(stderr, "Error al asignar memoria para producto.\n");
+        }
+        
+        p->codigoProducto = strdup(codigo);
+        p->nombreProducto = strdup(nombreProducto);
+        p->cantidadProducto = 0; 
+        p->precio = precioProducto;
+        p->siguiente = NULL;
+
+    } else {
+        fprintf(stderr, "No se encontraron resultados.\n");
+    }
+    mysql_stmt_free_result(stmt);
+    mysql_stmt_close(stmt);
+
+    return p;
+      }
+      
+  }  

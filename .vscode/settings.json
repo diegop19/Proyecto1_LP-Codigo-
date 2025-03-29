@@ -3,6 +3,8 @@
         "general.h": "c",
         "privadoBD.h": "c",
         "procedimientosbd.h": "c",
-        "stdio.h": "c"
-    }
+        "stdio.h": "c",
+        "stdlib.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
