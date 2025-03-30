@@ -424,3 +424,122 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       }
       mysql_close(conn);
   }
+
+  // Estadisticas
+
+  void mostrarEstadisticasCotizaciones() {
+      MYSQL *conexion;
+      if(conectar(&conexion)) return;
+  
+      printf("\n=== Estadisticas de cotizaciones ===\n");
+      
+      // Cotizaciones pendientes
+      if(mysql_query(conexion, "CALL obtener_cotizaciones_pendientes()")) {
+          printf("Error: %s\n", mysql_error(conexion));
+      } else {
+          MYSQL_RES *resultado = mysql_store_result(conexion);
+          if(resultado) {
+              MYSQL_ROW fila = mysql_fetch_row(resultado);
+              printf("Cotizaciones pendientes: %s\n", fila[0]);
+              mysql_free_result(resultado);
+          }
+      }
+  
+      // Cotizaciones facturadas
+      if(mysql_query(conexion, "CALL obtener_cotizaciones_facturadas()")) {
+          printf("Error: %s\n", mysql_error(conexion));
+      } else {
+          MYSQL_RES *resultado = mysql_store_result(conexion);
+          if(resultado) {
+              MYSQL_ROW fila = mysql_fetch_row(resultado);
+              printf("Cotizaciones facturadas: %s\n", fila[0]);
+              mysql_free_result(resultado);
+          }
+      }
+  
+      // Promedio de compra
+      if(mysql_query(conexion, "CALL obtener_promedio_compras()")) {
+          printf("Error: %s\n", mysql_error(conexion));
+      } else {
+          MYSQL_RES *resultado = mysql_store_result(conexion);
+          if(resultado) {
+              MYSQL_ROW fila = mysql_fetch_row(resultado);
+              printf("Promedio de compra: $%.2f\n", atof(fila[0]));
+              mysql_free_result(resultado);
+          }
+      }
+  
+      mysql_close(conexion);
+  }
+
+  void mostrarTopProductos() {
+      MYSQL *conexion;
+      if(conectar(&conexion)) return;
+  
+      printf("\n=== Top 5 productos mas vendidos ===\n");
+      
+      if(mysql_query(conexion, "CALL obtener_top_productos()")) {
+          printf("Error: %s\n", mysql_error(conexion));
+      } else {
+          MYSQL_RES *resultado = mysql_store_result(conexion);
+          if(resultado) {
+              printf("%-15s %-30s %-10s\n", "Código", "Producto", "Ventas");
+              printf("--------------------------------------------\n");
+              
+              MYSQL_ROW fila;
+              int contador = 0;
+              while((fila = mysql_fetch_row(resultado)) && contador < 5) {
+                  printf("%-15s %-30s %-10s\n", fila[0], fila[1], fila[2]);
+                  contador++;
+              }
+              mysql_free_result(resultado);
+          }
+      }
+  
+      mysql_close(conexion);
+  }
+
+  void mostrarVentasPorFamilia() {
+      MYSQL *conexion;
+      if(conectar(&conexion)) return;
+  
+      printf("\n=== Ventas por familia ===\n");
+      
+      // Producto más vendido por familia
+      printf("\nProducto más vendido por familia:\n");
+      if(mysql_query(conexion, "CALL obtener_producto_popular_por_familia()")) {
+          printf("Error: %s\n", mysql_error(conexion));
+      } else {
+          MYSQL_RES *resultado = mysql_store_result(conexion);
+          if(resultado) {
+              printf("%-20s %-15s %-30s %-10s\n", "Familia", "Código", "Producto", "Ventas");
+              printf("------------------------------------------------------------\n");
+              
+              MYSQL_ROW fila;
+              while((fila = mysql_fetch_row(resultado))) {
+                  printf("%-20s %-15s %-30s %-10s\n", fila[0], fila[1], fila[2], fila[3]);
+              }
+              mysql_free_result(resultado);
+          }
+      }
+  
+      // Monto vendido por familia
+      printf("\nMonto vendido por familia:\n");
+      if(mysql_query(conexion, "CALL obtener_ventas_por_familia()")) {
+          printf("Error: %s\n", mysql_error(conexion));
+      } else {
+          MYSQL_RES *resultado = mysql_store_result(conexion);
+          if(resultado) {
+              printf("%-20s %-15s\n", "Familia", "Total Vendido");
+              printf("----------------------------------\n");
+              
+              MYSQL_ROW fila;
+              while((fila = mysql_fetch_row(resultado))) {
+                  printf("%-20s $%-15.2f\n", fila[0], atof(fila[1]));
+              }
+              mysql_free_result(resultado);
+          }
+      }
+  
+      mysql_close(conexion);
+  }

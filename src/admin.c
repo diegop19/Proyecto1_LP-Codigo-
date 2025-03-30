@@ -14,7 +14,8 @@ void menuAdministrativo() {
         printf("2. Registro de productos\n");
         printf("3. Cargar inventario\n");
         printf("4. Consulta de facturas\n");
-        printf("5. Volver al Menú Principal\n");
+        printf("5. Mostrar Estadisticas\n");
+        printf("6. Volver al Menú Principal\n");
         printf("Seleccione una opción: ");
         scanf("%d", &opcion);
 
@@ -32,6 +33,9 @@ void menuAdministrativo() {
                 consultarFacturas();
                 break;
             case 5:
+                menuEstadisticas();
+                break;
+            case 6:
                 printf("Volviendo al Menú Principal\n");
                 break;
             default:
@@ -264,4 +268,37 @@ void cargarInventario() {
 void consultarFacturas() {
 
 
+}
+
+// Area de estadisticas 
+
+void menuEstadisticas() {
+    int opcion;
+    do {
+        printf("\n=== MENÚ DE ESTADÍSTICAS ===\n");
+        printf("1. Estadísticas de cotizaciones\n");
+        printf("2. Top productos más vendidos\n");
+        printf("3. Ventas por familia\n");
+        printf("4. Volver al menú administrativo\n");
+        printf("Seleccione una opción: ");
+        scanf("%d", &opcion);
+        limpiarBuffer();
+
+        switch(opcion) {
+            case 1:
+                mostrarEstadisticasCotizaciones();
+                break;
+            case 2:
+                mostrarTopProductos();
+                break;
+            case 3:
+                mostrarVentasPorFamilia();
+                break;
+            case 4:
+                printf("Volviendo al menú administrativo...\n");
+                break;
+            default:
+                printf("Opción no válida. Intente de nuevo.\n");
+        }
+    } while(opcion != 4);
 }

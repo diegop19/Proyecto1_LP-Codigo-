@@ -22,4 +22,6 @@ void actualizarStock(char *id, int cantidad);
 void cargarInventario();
 void consultarFacturas();
 
+void mostrarEstadisticas();
+
 #endif

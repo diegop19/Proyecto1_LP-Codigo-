@@ -33,8 +33,7 @@ void menuGeneral() {
         printf("2. Cotizar\n");
         printf("3. Modificar cotización\n");
         printf("4. Facturar\n");
-        printf("5. Estadísticas\n");
-        printf("6. Volver al Menú Principal\n");
+        printf("5. Volver al Menú Principal\n");
         printf("Seleccione una opción: ");
         scanf("%d", &opcion);
 
@@ -52,9 +51,6 @@ void menuGeneral() {
                 facturar();
                 break;
             case 5:
-                mostrarEstadisticas();
-                break;
-            case 6:
                 printf("Volviendo al Menú Principal...\n");
                 break;
             default:
@@ -136,8 +132,7 @@ void agregarProductoCotizacion(producto** listaCotizacion){
     
 }
 
-void modificarCotizacion() {
-}
+
 void removerProductoCotizacion(producto** lista){
     char c;
     while ((c = getchar()) != '\n' && c != EOF) {}
@@ -150,7 +145,7 @@ void removerProductoCotizacion(producto** lista){
 }
 
 void facturar() {
-    
+    a
 }
 
 void mostrarEstadisticas() {

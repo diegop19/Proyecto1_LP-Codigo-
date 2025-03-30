@@ -14,5 +14,7 @@ void filtrarBusqueda(char* identificador);
 producto* obtenerProductoIndividual(char* codigo);
 void guardarDatosCotizacion(producto* lista);
 void agregarProductosCot(int numCotizacion, producto* lista);
-
+void mostrarEstadisticasCotizaciones();
+void mostrarTopProductos();
+void mostrarVentasPorFamilia();
 #endif
