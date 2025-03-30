@@ -12,6 +12,7 @@ void actualizarStockBD(char* id, int cantidad);
 void desplegarProductos();
 void filtrarBusqueda(char* identificador);
 producto* obtenerProductoIndividual(char* codigo);
-
+void guardarDatosCotizacion(producto* lista);
+void agregarProductosCot(int numCotizacion, producto* lista);
 
 #endif

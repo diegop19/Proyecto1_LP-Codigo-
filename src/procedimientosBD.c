@@ -308,4 +308,119 @@ producto* obtenerProductoIndividual(char* codigo) {
     return p;
       }
       
-  }  
+  }
+  
+  
+void guardarDatosCotizacion(producto* lista){
+      MYSQL *conn;
+      int error;
+      error = conectar(&conn);
+      if(!error){
+            MYSQL_STMT *stmt;
+            MYSQL_BIND param[1];
+            int id_cotizacion;
+            stmt = mysql_stmt_init(conn);
+            printf("Aquí después de stmt\n");
+      if (!stmt) {
+            fprintf(stderr, "Error al inicializar statement\n");
+            mysql_close(conn);
+      }
+      char* consulta = "CALL insertarCotizacion(?)";
+    
+      if (mysql_stmt_prepare(stmt, consulta, strlen(consulta))) {
+            printf("Aquí después de prepare\n");
+            fprintf(stderr, "Error al preparar statement: %s\n", mysql_stmt_error(stmt));
+            mysql_stmt_close(stmt);
+            mysql_close(conn);
+
+      }
+      
+      memset(param, 0, sizeof(param));
+    
+      param[0].buffer_type = MYSQL_TYPE_LONG;
+      param[0].buffer = &id_cotizacion;
+      param[0].is_unsigned = 1;
+      param[0].is_null = 0;
+      
+      if (mysql_stmt_bind_param(stmt, param)) {
+            fprintf(stderr, "Error al bindear parámetros: %s\n", mysql_stmt_error(stmt));
+            mysql_stmt_close(stmt);
+            mysql_close(conn);
+
+      }
+    
+      if (mysql_stmt_execute(stmt)) {
+            fprintf(stderr, "Error al ejecutar procedimiento: %s\n", mysql_stmt_error(stmt));
+            mysql_stmt_close(stmt);
+            mysql_close(conn);
+
+      }
+      if (mysql_stmt_bind_result(stmt, param)) {
+            fprintf(stderr, "Error al bindear los resultados: %s\n", mysql_stmt_error(stmt));
+            mysql_stmt_close(stmt);
+            mysql_close(conn);
+            return; 
+      }
+      if (mysql_stmt_fetch(stmt)) {
+            fprintf(stderr, "Error al obtener el valor de salida: %s\n", mysql_stmt_error(stmt));
+            mysql_stmt_close(stmt);
+            mysql_close(conn);
+            return;
+      }
+    
+      printf("ID de cotización generado: %d\n", id_cotizacion);
+
+      agregarProductosCot(id_cotizacion, lista);
+
+      mysql_stmt_close(stmt);
+      mysql_close(conn);
+      }
+
+}
+
+void agregarProductosCot(int numCotizacion, producto* lista) {
+      MYSQL *conn;
+      MYSQL_RES *res;
+      conn = mysql_init(NULL);
+      
+      if (conn == NULL) {
+          fprintf(stderr, "Error al inicializar la conexión: %s\n", mysql_error(conn));
+          return;
+      }
+      
+      if (mysql_real_connect(conn, HOST, USERNAME, PASSWORD, 
+                           DATABASE, 0, NULL, 0) == NULL) {
+          fprintf(stderr, "Error al conectar: %s\n", mysql_error(conn));
+          mysql_close(conn);
+          return;
+      }
+
+      producto *actual = lista;
+      while (actual != NULL) {
+          if (actual->codigoProducto == NULL) {
+              fprintf(stderr, "Advertencia: Código de producto NULL, omitiendo...\n");
+              actual = actual->siguiente;
+              continue;
+          }
+          char query[512];
+          snprintf(query, sizeof(query), 
+                  "CALL insertarCotizacionProducto(%d, '%s', %d)",
+                  numCotizacion, actual->codigoProducto, actual->cantidadProducto);
+          if (mysql_query(conn, query)) {
+              fprintf(stderr, "Error al insertar producto %s: %s\n", 
+                      actual->codigoProducto, mysql_error(conn));
+
+              actual = actual->siguiente;
+              continue;
+          }
+          do {
+              res = mysql_store_result(conn);
+              if (res) {
+                  mysql_free_result(res);
+              }
+          } while (mysql_next_result(conn) == 0);
+          
+          actual = actual->siguiente;
+      }
+      mysql_close(conn);
+  }

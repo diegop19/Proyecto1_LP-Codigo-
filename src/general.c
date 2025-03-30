@@ -43,7 +43,6 @@ void menuGeneral() {
                 consultarCatalogo();
                 break;
             case 2:
-
                 cotizar();
                 break;
             case 3:
@@ -87,7 +86,7 @@ void cotizar() {
     producto* listaCotizacion = NULL;
     do{
         printf("=====MENU COTIZACION=====\n");
-        printf("1. Ver Productos\n2. Agregar Producto a la cotizacion\n3. Remover Producto\n4. Ver productos en la cotizacion\n5. Guardar\n6. Salir sin guardar\n");
+        printf("1. Ver Productos\n2. Agregar Producto a la cotizacion\n3. Remover Producto\n4. Ver productos en la cotizacion\n5. Guardar y salir\n6. Salir sin guardar\nElija una opcion: ");
         scanf("%d", &opcion);
         switch(opcion){
             case 1:
@@ -103,8 +102,16 @@ void cotizar() {
                 verProductosEnCotizacion(&listaCotizacion);
                 break;
             case 5:
-                guardarDatosCotizacion();
-                break;
+                if (listaCotizacion == NULL){
+                    printf("No podemos hacer una cotizacion vacia...\n");
+                    sleep(2);
+                    break;
+                }else{
+                    guardarDatosCotizacion(listaCotizacion);
+                    menuGeneral();
+                    break;
+                }
+                
             case 6:
                 printf("Volviendo al menu principal...\n");
                 break;
@@ -147,9 +154,6 @@ void facturar() {
 }
 
 void mostrarEstadisticas() {
-
-}
-void guardarDatosCotizacion(){
 
 }
 void verProductosEnCotizacion(producto **lista){
