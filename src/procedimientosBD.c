@@ -212,7 +212,7 @@ void filtrarBusqueda(char* identificador) {
             if (mysql_query(conexion, query)) {
                   fprintf(stderr, "Error al ejecutar la consulta: %s\n", mysql_error(conexion));
                   mysql_close(conexion);
-                  exit(1);
+                  return;
             }
             MYSQL_RES *res = mysql_store_result(conexion);
             if (res == NULL) {

@@ -8,5 +8,6 @@
 
 void insertarProductoCotizacion(producto* nuevoProducto, producto** lista);
 void verificarExistencia(char* codigo, int cantidad,producto** lista);
+void removerProductoCot(char* codigo, producto** lista);
 
 #endif

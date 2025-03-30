@@ -97,10 +97,11 @@ void cotizar() {
                 agregarProductoCotizacion(&listaCotizacion);
                 break;
             case 3: 
-                removerProductoCotizacion();
+                removerProductoCotizacion(&listaCotizacion);
                 break;
             case 4:
                 verProductosEnCotizacion(&listaCotizacion);
+                break;
             case 5:
                 guardarDatosCotizacion();
                 break;
@@ -130,8 +131,15 @@ void agregarProductoCotizacion(producto** listaCotizacion){
 
 void modificarCotizacion() {
 }
-void removerProductoCotizacion(){
-
+void removerProductoCotizacion(producto** lista){
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+    printf("Inserte el codigo del producto que desea remover: ");
+    char* codigo = obtenerInput();
+    printf("Removiendo...\n");
+    sleep(2);
+    removerProductoCot(codigo, lista);
+    free(codigo);
 }
 
 void facturar() {
