@@ -4,15 +4,15 @@ DELIMITER //
 CREATE PROCEDURE sp_obtener_cotizaciones_pendientes()
 BEGIN
     SELECT COUNT(*) AS total_pendientes
-    FROM tbl_cotizaciones 
-    WHERE estado_cotizacion = 'PENDIENTE';
+    FROM cotizacion 
+    WHERE estadoCotizacion = 0;
 END //
 
 CREATE PROCEDURE sp_obtener_cotizaciones_facturadas()
 BEGIN
     SELECT COUNT(*) AS total_facturadas
-    FROM tbl_cotizaciones 
-    WHERE estado_cotizacion = 'FACTURADA';
+    FROM cotizacion 
+    WHERE estadoCotizacion = 1;
 END //
 
 CREATE PROCEDURE sp_obtener_promedio_compras()
@@ -21,8 +21,7 @@ BEGIN
         AVG(total) AS promedio,
         SUM(total) AS monto_total,
         COUNT(*) AS total_compras
-    FROM tbl_facturas
-    WHERE estado = 'ACTIVA';
+    FROM factura;
 END //
 
 DELIMITER ;
