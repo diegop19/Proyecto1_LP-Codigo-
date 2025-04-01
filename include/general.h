@@ -11,5 +11,5 @@ void agregarProductoCotizacion();
 void verProductosEnCotizacion(producto **lista);
 void removerProductoCotizacion();
 void guardarDatosCotizacion();
-
+void guardarCambios(int idCotizacion, producto* lista);
 #endif

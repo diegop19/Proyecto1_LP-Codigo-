@@ -8,4 +8,9 @@ typedef struct producto{
     struct producto* siguiente;
 }producto;
 
+typedef struct codigoProducto {
+    char* codigo;              
+    struct codigoProducto* siguiente;
+} codigoProducto;
+
 #endif

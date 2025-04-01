@@ -4,6 +4,21 @@
 #include <stdio.h>
 #include "estructuras.h"
 
+producto* crearProducto(const char* codigo, const char* nombre, int cantidad, double precio) {
+      producto* nuevo = (producto*)malloc(sizeof(producto));
+      if (nuevo == NULL) {
+          return NULL;
+      }
+      
+      nuevo->codigoProducto = strdup(codigo);
+      nuevo->nombreProducto = strdup(nombre);
+      nuevo->cantidadProducto = cantidad;
+      nuevo->precio = precio;
+      nuevo->siguiente = NULL;
+      
+      return nuevo;
+  }
+
 int conectar(MYSQL **conexion){
     int error;
     *conexion = mysql_init(NULL);
@@ -490,7 +505,7 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       printf("\n=== Estadisticas de cotizaciones ===\n");
       
       // Cotizaciones pendientes
-      if(mysql_query(conexion, "CALL obtener_cotizaciones_pendientes()")) {
+      if(mysql_query(conexion, "CALL sp_obtener_cotizaciones_pendientes()")) {
           printf("Error: %s\n", mysql_error(conexion));
       } else {
           MYSQL_RES *resultado = mysql_store_result(conexion);
@@ -502,7 +517,7 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       }
   
       // Cotizaciones facturadas
-      if(mysql_query(conexion, "CALL obtener_cotizaciones_facturadas()")) {
+      if(mysql_query(conexion, "CALL sp_obtener_cotizaciones_facturadas()")) {
           printf("Error: %s\n", mysql_error(conexion));
       } else {
           MYSQL_RES *resultado = mysql_store_result(conexion);
@@ -514,7 +529,7 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       }
   
       // Promedio de compra
-      if(mysql_query(conexion, "CALL obtener_promedio_compras()")) {
+      if(mysql_query(conexion, "CALL sp_obtener_promedio_compras()")) {
           printf("Error: %s\n", mysql_error(conexion));
       } else {
           MYSQL_RES *resultado = mysql_store_result(conexion);
@@ -599,3 +614,135 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
   
       mysql_close(conexion);
   }
+  producto* datosCotizacion(int numCotizacion){
+      MYSQL* conexion;
+      MYSQL_RES* res;
+      MYSQL_ROW row;
+      
+      producto* lista = NULL;
+      producto* ultimo = NULL;
+      
+      
+      int error = conectar(&conexion);
+      if(!error) {
+            char query[256];
+            snprintf(query, sizeof(query), 
+                     "CALL obtenerCotizaciones(%d)", numCotizacion);
+            
+            if (mysql_query(conexion, query)) {
+                fprintf(stderr, "Error en la consulta: %s\n", mysql_error(conexion));
+                mysql_close(conexion);
+                return NULL;
+            }
+
+            res = mysql_store_result(conexion);
+            if (res == NULL) {
+                fprintf(stderr, "Error al obtener resultados: %s\n", mysql_error(conexion));
+                mysql_close(conexion);
+                return NULL;
+            }
+            
+            while ((row = mysql_fetch_row(res)) != NULL) {
+                producto* nuevo = crearProducto(
+                    row[0],  
+                    row[1],  
+                    atoi(row[3]),  
+                    atof(row[2])   
+                );
+                
+                if (nuevo == NULL) {
+                    fprintf(stderr, "Error al crear producto\n");
+                    mysql_free_result(res);
+                    mysql_close(conexion);
+                    return NULL;
+                }
+                
+                if (lista == NULL) {
+                    lista = nuevo;
+                    ultimo = nuevo;
+                } else {
+                    ultimo->siguiente = nuevo;
+                    ultimo = nuevo;
+                }
+            }
+            mysql_free_result(res);
+            mysql_close(conexion);
+            
+            return lista;
+
+      }
+  }
+
+  int actualizarCotizacionBD(int idCotizacion, producto* lista) {
+      MYSQL* conexion;
+      int error = 0;
+      if (conectar(&conexion)) {
+          fprintf(stderr, "Error al conectar a la base de datos\n");
+          return 1;
+      }
+      producto* actual = lista;
+      while (actual != NULL && !error) {
+          char query[512];
+          snprintf(query, sizeof(query),
+                  "CALL actualizarCotizacionProducto(%d, '%s', %d)",
+                  idCotizacion, 
+                  actual->codigoProducto, 
+                  actual->cantidadProducto);
+          if (mysql_query(conexion, query)) {
+              fprintf(stderr, "Error al actualizar producto %s: %s\n", 
+                      actual->codigoProducto, mysql_error(conexion));
+              error = 1;
+          }
+          
+          actual = actual->siguiente;
+      }
+      
+      mysql_close(conexion);
+      return error;
+  }
+
+  void eliminarProductosLista(int idCotizacion, codigoProducto* lista) {
+      MYSQL *conn;
+      MYSQL_STMT *stmt;
+      MYSQL_BIND params[2];
+      const char *query = "CALL eliminarProductoCotizacion(?, ?)";
+      int error;
+      error = conectar(&conn);
+      if(!error){
+            stmt = mysql_stmt_init(conn);
+            if (mysql_stmt_prepare(stmt, query, strlen(query))) {
+                  fprintf(stderr, "Error al preparar stmt: %s\n", mysql_stmt_error(stmt));
+                  mysql_stmt_close(stmt);
+                  return;
+            }
+            memset(params, 0, sizeof(params));
+            params[0].buffer_type = MYSQL_TYPE_LONG;
+            params[0].buffer = &idCotizacion;
+            params[0].is_null = 0;
+    
+            params[1].buffer_type = MYSQL_TYPE_STRING;
+            params[1].is_null = 0;
+    
+            codigoProducto *actual = lista;
+            while (actual != NULL) {
+            params[1].buffer = actual->codigo;
+            params[1].buffer_length = strlen(actual->codigo);
+            if (mysql_stmt_bind_param(stmt, params)) {
+                  fprintf(stderr, "Error al vincular parámetros: %s\n", mysql_stmt_error(stmt));
+                  actual = actual->siguiente;
+                  continue;
+            }
+            if (mysql_stmt_execute(stmt)) {
+                  fprintf(stderr, "Error al ejecutar procedimiento para código %s: %s\n", 
+                  actual->codigo, mysql_stmt_error(stmt));
+            }
+            while(mysql_stmt_next_result(stmt) == 0) {
+                  MYSQL_RES *res = mysql_stmt_result_metadata(stmt);
+                  if (res) mysql_free_result(res);
+            }
+        actual = actual->siguiente;
+    }
+    mysql_stmt_close(stmt);
+
+      }
+}

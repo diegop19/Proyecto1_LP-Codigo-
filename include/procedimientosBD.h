@@ -17,4 +17,8 @@ void agregarProductosCot(int numCotizacion, producto* lista);
 void mostrarEstadisticasCotizaciones();
 void mostrarTopProductos();
 void mostrarVentasPorFamilia();
+producto* datosCotizacion(int numCotizaion);
+producto* crearProducto(const char* codigo, const char* nombre, int cantidad, double precio) ;
+int actualizarCotizacionBD(int idCotizacion, producto* lista);
+void eliminarProductosLista(int idCotizacion, codigoProducto* lista);
 #endif

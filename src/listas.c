@@ -64,3 +64,44 @@ void removerProductoCot(char* codigo, producto** lista) {
 
     printf("Producto con código %s no encontrado.\n", codigo);
 }
+void reducirAumentarCantidades(int cantidad, char* idProducto, producto* lista) {
+    producto* actual = lista;
+    int productoEncontrado = 0; 
+    while (actual != NULL) {
+        if (strcmp(actual->codigoProducto, idProducto) == 0) {
+            productoEncontrado = 1;
+            actual->cantidadProducto += cantidad;
+            if (actual->cantidadProducto < 0) {
+                printf("Advertencia: La cantidad no puede ser negativa. Se ajustará a 0.\n");
+                actual->cantidadProducto = 0;
+            }
+            
+            printf("Cantidad actualizada para producto %s: %d\n", 
+                   idProducto, actual->cantidadProducto);
+            break;
+        }
+        actual = actual->siguiente;
+    }
+    
+    if (!productoEncontrado) {
+        printf("Error: Producto con código %s no encontrado en la lista.\n", idProducto);
+    }
+}
+void agregarCodigoEliminar(codigoProducto** lista, const char* codigo) {
+    if (codigo == NULL || strlen(codigo) == 0) {
+        return;
+    }
+    codigoProducto* nuevo = (codigoProducto*)malloc(sizeof(codigoProducto));
+    if (nuevo == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para el código\n");
+        return;
+    }
+    nuevo->codigo = strdup(codigo);
+    if (nuevo->codigo == NULL) {
+        free(nuevo);
+        fprintf(stderr, "Error: No se pudo asignar memoria para el código\n");
+        return;
+    }
+    nuevo->siguiente = *lista;
+    *lista = nuevo;
+}

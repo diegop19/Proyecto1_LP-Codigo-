@@ -280,7 +280,6 @@ void consultarFacturas() {
 
 }
 
-// Area de estadisticas 
 
 void menuEstadisticas() {
     int opcion;
@@ -292,7 +291,8 @@ void menuEstadisticas() {
         printf("4. Volver al menú administrativo\n");
         printf("Seleccione una opción: ");
         scanf("%d", &opcion);
-        limpiarBuffer();
+        char c;
+        while ((c = getchar()) != '\n' && c != EOF) {}
 
         switch(opcion) {
             case 1:

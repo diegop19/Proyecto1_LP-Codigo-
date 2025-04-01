@@ -57,7 +57,7 @@ void menuGeneral() {
                 printf("Opción no válida. Intente de nuevo.\n");
                 break;
         }
-    } while (opcion != 6);
+    } while (opcion != 5);
 }
 
 void consultarCatalogo() {
@@ -145,7 +145,6 @@ void removerProductoCotizacion(producto** lista){
 }
 
 void facturar() {
-    a
 }
 
 void mostrarEstadisticas() {
@@ -172,4 +171,71 @@ void verProductosEnCotizacion(producto **lista){
     }
 
     printf("===================================\n");
+}
+void modificarCotizacion(){
+    char c;
+    int numCotizacion;
+    printf("Ingrese el numero de cotizacion\n");
+    scanf("%i",&numCotizacion);
+    producto* lista = datosCotizacion(numCotizacion);
+    codigoProducto* listaCodigos = NULL;
+    if(lista != NULL){
+        int decision;
+        int* cantidad;
+        do{
+            printf("=======MENU EDITAR COTIZACION=======\n");
+            printf("1.Reducir o aumentar cantidad\n2.Eliminar un producto\n3.Agregar un producto\n4.Ver mis productos\n5.Guardar cambios\n6.Salir\n7.Ver productos\nIngrese una opción:\n");
+            scanf("%i", &decision);
+            
+            switch(decision){
+                case 1:
+                    while ((c = getchar()) != '\n' && c != EOF) {}
+                    printf("Indique el codigo del articulo que desea editar: ");
+                    char* codigoProducto = obtenerInput();
+                    printf("\nIndique la cantidad a sumar o restar(si suma coloque el numero normalmente, si resta coloque un menos (-) al frente)\n");
+                    int cantidad;
+                    scanf("%i", &cantidad);
+                    while ((c = getchar()) != '\n' && c != EOF) {}
+                    reducirAumentarCantidades(cantidad, codigoProducto, lista);
+                    break;
+                case 2:
+                    while ((c = getchar()) != '\n' && c != EOF) {}
+                    printf("Ingrese el codigo del producto que desea eliminar: ");
+                    char* codigo = obtenerInput();
+                    printf("\n");
+                    agregarCodigoEliminar(&listaCodigos, codigo);
+                    removerProductoCot(codigo, &lista);
+                    break;
+                case 3:
+                    agregarProductoCotizacion(&lista);
+                    break;
+                case 4:
+                    verProductosEnCotizacion(&lista);
+                    break;
+                case 5:
+                    guardarCambios(numCotizacion, lista);
+                    eliminarProductosLista(numCotizacion, listaCodigos);
+                    break;
+                case 6:
+                    break;
+                case 7:
+                    consultarCatalogo();
+                    break;
+                default:
+                    printf("Ingrese una opcion valida\n");
+                    break;
+            }
+        }while(decision != 6);
+    }else{
+        printf("Esa cotizacion no existe\n");
+    }
+}
+void guardarCambios(int idCotizacion, producto* lista) {
+    printf("\nGuardando cambios en la base de datos...\n");
+    
+    if (actualizarCotizacionBD(idCotizacion, lista) == 0) {
+        printf("¡Cotización actualizada exitosamente!\n");
+    } else {
+        printf("Ocurrieron errores al actualizar algunos productos.\n");
+    }
 }

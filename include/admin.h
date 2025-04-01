@@ -21,7 +21,7 @@ void eliminarProducto();
 void actualizarStock(char *id, int cantidad);
 void cargarInventario();
 void consultarFacturas();
-
+void menuEstadisticas();
 void mostrarEstadisticas();
 
 #endif
