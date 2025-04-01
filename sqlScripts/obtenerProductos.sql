@@ -1,9 +1,0 @@
-USE bazardb;
-DELIMITER $$
-
-CREATE PROCEDURE obtenerProductos()
-BEGIN
-    SELECT * FROM PRODUCTO ORDER BY nombreProducto;
-END $$
-
-DELIMITER ;
