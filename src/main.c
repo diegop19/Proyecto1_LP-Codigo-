@@ -22,7 +22,14 @@ int main() {
 
         switch (opcion) {
             case 1:
-                menuAdministrativo();
+                char c;
+                while ((c = getchar()) != '\n' && c != EOF) {}
+                char* nombreUsuario;
+                printf("Inserte el nombre de usuario: ");
+                nombreUsuario = obtenerInput();
+                printf("\nIngrese la contraseña: ");
+                char* contraseña = obtenerInput();
+                verificarCredenciales(nombreUsuario, contraseña);
                 break;
             case 2:
                 menuGeneral();

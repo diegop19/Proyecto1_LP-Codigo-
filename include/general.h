@@ -1,6 +1,7 @@
 #ifndef GENERAL_H
 #define GENERAL_H
 #include "listas.h"
+char* obtenerInput();
 void menuGeneral();
 void consultarCatalogo();
 void cotizar();

@@ -23,5 +23,5 @@ void cargarInventario();
 void consultarFacturas();
 void menuEstadisticas();
 void mostrarEstadisticas();
-
+void verificarCredenciales(char* usuario, char* contraseña);
 #endif

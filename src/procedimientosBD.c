@@ -962,7 +962,6 @@ void actualizarFactura(int identificadorFactura, double subtotal, double total){
                 fprintf(stderr, "Error al inicializar el statement: %s\n", mysql_error(conn));
                 return;
             }
-    t
             if (mysql_stmt_prepare(stmt, query, strlen(query))) {
                 fprintf(stderr, "Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
                 mysql_stmt_close(stmt);
@@ -1268,4 +1267,45 @@ int eliminarFactura(int idFactura){
         return 0;
     }
     return 1;
+}
+int validarCredenciales(char* nombreUsuario, char* clave){
+    MYSQL *conn;
+    if (conectar(&conn) != 0) {
+        printf("No hay conexion\n");
+        return -1;
+    }else{
+        char query[512];
+        MYSQL_RES *res;
+        int resultado = 0;
+    
+
+        snprintf(query, sizeof(query), 
+             "CALL validarCredencialesAdmin('%s', '%s', @resultado)", 
+             nombreUsuario, clave);
+    
+        if (mysql_query(conn, query)) {
+            fprintf(stderr, "Error al validar credenciales: %s\n", mysql_error(conn));
+            return 0;
+        }
+
+        do {
+            res = mysql_store_result(conn);
+            if (res) mysql_free_result(res);
+        } while (mysql_next_result(conn) == 0);
+        if (mysql_query(conn, "SELECT @resultado")) {
+            fprintf(stderr, "Error al obtener resultado: %s\n", mysql_error(conn));
+            return 0;
+        }
+    
+        res = mysql_store_result(conn);
+        if (res) {
+            MYSQL_ROW row = mysql_fetch_row(res);
+            if (row) {
+                resultado = atoi(row[0]);
+            }
+            mysql_free_result(res);
+        }
+    
+        return resultado;
+    }
 }

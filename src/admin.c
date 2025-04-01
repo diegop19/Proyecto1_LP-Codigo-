@@ -6,6 +6,15 @@
 #include "admin.h"
 #include "procedimientosBD.h"
 
+void verificarCredenciales(char* usuario, char* contraseña){
+    if(validarCredenciales(usuario, contraseña) == 1){
+        menuAdministrativo();
+    }else{
+        printf("Usuario y contraseña incorrectos\n");
+    }
+
+}
+
 void menuAdministrativo() {
     int opcion;
     do {
