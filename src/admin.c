@@ -211,7 +211,7 @@ void registrarProductos() {
 
 
 void eliminarProducto() {
-    char identificador[50];
+    char identificador[100];
     
     printf("\n=== Eliminar Producto ===\n");
     printf("Ingrese el identificador del producto a eliminar: ");
