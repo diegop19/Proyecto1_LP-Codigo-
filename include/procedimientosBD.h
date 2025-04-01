@@ -22,4 +22,10 @@ producto* crearProducto(const char* codigo, const char* nombre, int cantidad, do
 int actualizarCotizacionBD(int idCotizacion, producto* lista);
 void eliminarProductosLista(int idCotizacion, codigoProducto* lista);
 int eliminarProductoBD(char* identificador);
+int obtenerNumeroFactura();
+int obtenerCantidadDisponible(const char *idProducto);
+void rebajarStock(const char *codigoProducto, int cantidadRebajar);
+void actualizarFactura(int identificadorFactura, double subtotal, double total);
+void facturarProductos(int numCotizacion,producto* lista);
+
 #endif

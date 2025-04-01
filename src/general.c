@@ -145,6 +145,24 @@ void removerProductoCotizacion(producto** lista){
 }
 
 void facturar() {
+    int numCotizacion;
+    printf("inserte el numero de cotizacion para facturar: ");
+    scanf("%i", &numCotizacion);
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+    producto* listaElementos = datosCotizacion(numCotizacion);
+    if(listaElementos != NULL){
+        int numFactura = obtenerNumeroFactura();
+        verificarStock(listaElementos);
+        double subtotal = calcularTotal(listaElementos);
+        double total = subtotal*1.13;
+        actualizarFactura(numFactura, subtotal, total);
+        facturarProductos(numFactura, listaElementos);
+        
+    }
+
+    
+    
 }
 
 void mostrarEstadisticas() {

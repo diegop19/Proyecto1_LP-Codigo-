@@ -105,3 +105,41 @@ void agregarCodigoEliminar(codigoProducto** lista, const char* codigo) {
     nuevo->siguiente = *lista;
     *lista = nuevo;
 }
+
+void verificarStock(producto* listaElementos) {
+    producto* actual = listaElementos;
+
+    while (actual != NULL) {
+        
+        int cantidadDisponible = obtenerCantidadDisponible(actual->codigoProducto);
+        printf("%i\n", cantidadDisponible);
+        if (actual->cantidadProducto > cantidadDisponible) {
+            printf("Producto: %s\n", actual->nombreProducto);
+            printf("Cantidad solicitada: %d\n", actual->cantidadProducto);
+            printf("Cantidad disponible en stock: %d\n", cantidadDisponible);
+            printf("¿Desea hacer el ajuste? (s/n): ");
+            char respuesta;
+            scanf(" %c", &respuesta);
+            if (respuesta == 's' || respuesta == 'S') {
+                printf("Se ha ajustado la cantidad solicitada a: %d\n", cantidadDisponible);
+                actual->cantidadProducto = cantidadDisponible;
+            } else {
+                actual->cantidadProducto = 0;
+                printf("No se realiza el ajuste.\n");
+            }
+        }
+        rebajarStock(actual->codigoProducto,actual->cantidadProducto);
+        actual = actual->siguiente;
+    }
+}
+double calcularTotal(producto *listaElementos) {
+    double total = 0.0;
+    producto *actual = listaElementos;
+
+    while (actual != NULL) {
+        total += actual->precio * actual->cantidadProducto;  
+        actual = actual->siguiente;  
+    }
+
+    return total;  
+}

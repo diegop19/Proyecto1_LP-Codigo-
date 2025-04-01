@@ -509,10 +509,12 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
           printf("Error: %s\n", mysql_error(conexion));
       } else {
           MYSQL_RES *resultado = mysql_store_result(conexion);
-          if(resultado) {
+          if(resultado != NULL) {
               MYSQL_ROW fila = mysql_fetch_row(resultado);
               printf("Cotizaciones pendientes: %s\n", fila[0]);
               mysql_free_result(resultado);
+          }else{
+            printf("No se encontraron cotizaciones pentiendes\n");
           }
       }
   
@@ -521,10 +523,12 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
           printf("Error: %s\n", mysql_error(conexion));
       } else {
           MYSQL_RES *resultado = mysql_store_result(conexion);
-          if(resultado) {
+          if(resultado != NULL) {
               MYSQL_ROW fila = mysql_fetch_row(resultado);
               printf("Cotizaciones facturadas: %s\n", fila[0]);
               mysql_free_result(resultado);
+          }else{
+            printf("No se encontraron cotizaciones pagadas\n");
           }
       }
   
@@ -746,3 +750,276 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
 
       }
 }
+int obtenerNumeroFactura() {
+      MYSQL *conn;
+      MYSQL_RES *res;
+      MYSQL_ROW row;
+      int numeroFactura = -1; 
+      int error = conectar(&conn);
+      if(!error){
+
+            if (mysql_query(conn, "CALL CrearFactura();")) {
+            fprintf(stderr, "Error en la consulta: %s\n", mysql_error(conn));
+            return -1;  
+            }
+            res = mysql_store_result(conn);
+            if (res == NULL) {
+            fprintf(stderr, "Error al obtener el resultado: %s\n", mysql_error(conn));
+            return -1;  
+            }
+  
+            row = mysql_fetch_row(res);
+            if (row != NULL) {
+        
+                  numeroFactura = atoi(row[0]);
+            } else {
+            printf("No se pudo obtener el número de la factura.\n");
+            }
+            mysql_free_result(res);
+  
+            return numeroFactura;  
+      }
+}
+
+void facturarProductos(int idFactura, producto* lista) {
+      MYSQL *conn;
+      int error;
+      error = conectar(&conn);
+      
+      if(!error) {
+          MYSQL_STMT *stmt;
+          MYSQL_BIND param[4];
+          
+          stmt = mysql_stmt_init(conn);
+          if (!stmt) {
+              fprintf(stderr, "Error al inicializar statement\n");
+              mysql_close(conn);
+              return;
+          }
+          
+          char* consulta = "CALL guardarFacturaProducto(?, ?, ?, ?)";
+          
+          if (mysql_stmt_prepare(stmt, consulta, strlen(consulta))) {
+              fprintf(stderr, "Error al preparar statement: %s\n", mysql_stmt_error(stmt));
+              mysql_stmt_close(stmt);
+              mysql_close(conn);
+              return;
+          }
+          
+          // Recorremos la lista de productos
+          producto* actual = lista;
+          while(actual != NULL) {
+              memset(param, 0, sizeof(param));
+              
+              // Parámetro 1: idFactura (INT)
+              param[0].buffer_type = MYSQL_TYPE_LONG;
+              param[0].buffer = &idFactura;
+              param[0].is_unsigned = 1;
+              param[0].is_null = 0;
+              
+              // Parámetro 2: identificadorProducto (VARCHAR) - usamos codigoProducto
+              param[1].buffer_type = MYSQL_TYPE_STRING;
+              param[1].buffer = actual->codigoProducto;
+              param[1].buffer_length = strlen(actual->codigoProducto);
+              param[1].is_null = 0;
+              
+              // Parámetro 3: cantidad (INT) - usamos cantidadProducto
+              param[2].buffer_type = MYSQL_TYPE_LONG;
+              param[2].buffer = &(actual->cantidadProducto);
+              param[2].is_unsigned = 1;
+              param[2].is_null = 0;
+              
+              // Parámetro 4: precioUnitario (DOUBLE) - usamos precio
+              param[3].buffer_type = MYSQL_TYPE_DOUBLE;
+              param[3].buffer = &(actual->precio);
+              param[3].is_null = 0;
+              
+              if (mysql_stmt_bind_param(stmt, param)) {
+                  fprintf(stderr, "Error al bindear parámetros: %s\n", mysql_stmt_error(stmt));
+                  mysql_stmt_close(stmt);
+                  mysql_close(conn);
+                  return;
+              }
+              
+              if (mysql_stmt_execute(stmt)) {
+                  fprintf(stderr, "Error al ejecutar procedimiento: %s\n", mysql_stmt_error(stmt));
+                  mysql_stmt_close(stmt);
+                  mysql_close(conn);
+                  return;
+              }
+              
+              // --- Cambio importante: Consumir todos los resultados ---
+              do {
+                  MYSQL_RES *result = mysql_stmt_result_metadata(stmt);
+                  if (result) {
+                      mysql_stmt_store_result(stmt);
+                      MYSQL_ROW row;
+                      while (!mysql_stmt_fetch(stmt)) {
+                          // Puedes procesar el mensaje de salida si lo necesitas
+                      }
+                      mysql_free_result(result);
+                  }
+              } while (!mysql_stmt_next_result(stmt)); // Avanzar al siguiente resultado si hay
+              
+              actual = actual->siguiente;
+          }
+          
+          mysql_stmt_close(stmt);
+          mysql_close(conn);
+      }
+  }
+int obtenerCantidadDisponible(const char *idProducto){
+      MYSQL *conn;
+      int error = conectar(&conn);
+      if(!error){
+            MYSQL_RES *res;
+            MYSQL_ROW row;
+            int cantidadEnStock = -1;
+
+    
+            char query[256];
+            snprintf(query, sizeof(query), "CALL obtenerDisponible('%s', @cantidadDisponible);", idProducto);
+
+            if (mysql_query(conn, query)) {
+                  fprintf(stderr, "Error al ejecutar la consulta: %s\n", mysql_error(conn));
+                  return -1; 
+            }
+
+            if (mysql_query(conn, "SELECT @cantidadDisponible;")) {
+                  fprintf(stderr, "Error al obtener el resultado de la variable: %s\n", mysql_error(conn));
+                  return -1;
+            }
+
+            res = mysql_store_result(conn);
+            if (res == NULL) {
+                  fprintf(stderr, "Error al almacenar el resultado: %s\n", mysql_error(conn));
+                  return -1;
+            }
+            row = mysql_fetch_row(res);
+            if (row != NULL) {
+                  cantidadEnStock = atoi(row[0]);
+            }
+            mysql_free_result(res);
+
+            return cantidadEnStock;  
+      }
+
+}
+void rebajarStock(const char *codigoProducto, int cantidadRebajar){
+      MYSQL *conn;
+      int error = conectar(&conn);
+      if(!error){
+            MYSQL_STMT *stmt;
+            MYSQL_BIND params[2];  // Para los dos parámetros del procedimiento
+
+    // Preparamos la consulta para el procedimiento almacenado
+    const char *query = "CALL reabajarStock(?, ?)";
+
+    stmt = mysql_stmt_init(conn);
+    if (!stmt) {
+        fprintf(stderr, "Error al inicializar el statement: %s\n", mysql_error(conn));
+        return;
+    }
+
+    // Preparamos el statement
+    if (mysql_stmt_prepare(stmt, query, strlen(query))) {
+        fprintf(stderr, "Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
+        mysql_stmt_close(stmt);
+        return;
+    }
+
+    // Asociamos los parámetros al statement
+    memset(params, 0, sizeof(params));
+
+    // Parametro 1: códigoProducto (VARCHAR)
+    params[0].buffer_type = MYSQL_TYPE_STRING;
+    params[0].buffer = (char *)codigoProducto;
+    params[0].buffer_length = strlen(codigoProducto);
+
+    // Parametro 2: cantidadRebajar (INT)
+    params[1].buffer_type = MYSQL_TYPE_LONG;
+    params[1].buffer = &cantidadRebajar;
+
+    // Asocia los parámetros con el statement
+    if (mysql_stmt_bind_param(stmt, params)) {
+        fprintf(stderr, "Error al asociar parámetros: %s\n", mysql_stmt_error(stmt));
+        mysql_stmt_close(stmt);
+        return;
+    }
+
+    // Ejecutamos el statement
+    if (mysql_stmt_execute(stmt)) {
+        fprintf(stderr, "Error al ejecutar el procedimiento: %s\n", mysql_stmt_error(stmt));
+    } else {
+        // Si la ejecución es exitosa, mostramos un mensaje
+        printf("Stock actualizado exitosamente.\n");
+    }
+
+    // Cerramos el statement
+    mysql_stmt_close(stmt);
+
+
+      }
+
+}
+
+void actualizarFactura(int identificadorFactura, double subtotal, double total){
+      MYSQL *conn;
+      int error;
+      error = conectar(&conn);
+      if(!error){
+            MYSQL_STMT *stmt;
+    MYSQL_BIND params[3];  // Parámetros para el procedimiento (identificadorFactura, subtotal, total)
+    
+    // La consulta para llamar al procedimiento almacenado
+    const char *query = "CALL actualizarFactura(?, ?, ?)";
+    
+    // Inicializar el statement
+    stmt = mysql_stmt_init(conn);
+    if (!stmt) {
+        fprintf(stderr, "Error al inicializar el statement: %s\n", mysql_error(conn));
+        return;
+    }
+    
+    // Preparar el statement
+    if (mysql_stmt_prepare(stmt, query, strlen(query))) {
+        fprintf(stderr, "Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
+        mysql_stmt_close(stmt);
+        return;
+    }
+
+    // Preparar los parámetros
+    memset(params, 0, sizeof(params));
+    
+    // Parametro 1: identificadorFactura (INT)
+    params[0].buffer_type = MYSQL_TYPE_LONG;
+    params[0].buffer = &identificadorFactura;
+
+    // Parametro 2: subtotal (DOUBLE)
+    params[1].buffer_type = MYSQL_TYPE_DOUBLE;
+    params[1].buffer = &subtotal;
+
+    // Parametro 3: total (DOUBLE)
+    params[2].buffer_type = MYSQL_TYPE_DOUBLE;
+    params[2].buffer = &total;
+    
+    // Asociar los parámetros con el statement
+    if (mysql_stmt_bind_param(stmt, params)) {
+        fprintf(stderr, "Error al asociar los parámetros: %s\n", mysql_stmt_error(stmt));
+        mysql_stmt_close(stmt);
+        return;
+    }
+    
+    // Ejecutar el statement
+    if (mysql_stmt_execute(stmt)) {
+        fprintf(stderr, "Error al ejecutar el procedimiento: %s\n", mysql_stmt_error(stmt));
+    } else {
+        printf("Factura con ID %d actualizada exitosamente.\n", identificadorFactura);
+    }
+    
+    // Cerrar el statement
+    mysql_stmt_close(stmt);
+      }
+}
+
+  
