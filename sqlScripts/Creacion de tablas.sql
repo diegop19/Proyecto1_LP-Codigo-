@@ -75,7 +75,7 @@ CREATE TABLE CLIENTE_FACTURA (
     idCliente INT,
     idFactura INT,
     PRIMARY KEY (idCliente, idFactura),
-    FOREIGN KEY (idCliente) REFERENCES CLIENTE(idCliente),
+    FOREIGN KEY (idCliente) REFERENCES CLIENTE(cedulaCliente),
     FOREIGN KEY (idFactura) REFERENCES FACTURA(identificadorFactura)
 );
 

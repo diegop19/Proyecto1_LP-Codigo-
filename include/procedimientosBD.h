@@ -31,5 +31,8 @@ void desplegarFacturas();
 void desplegarDetallesFactura(int factura_id);
 int actualizarEstadoCotizacionBD(int numCotizacion);
 void mostrarResultado(const char* consulta, const char* mensaje, int esDecimal);
+int agregarClienteBD(int numCedula, const char *nombre, const char *apellido);
+int agregarFacturaACliente(int idCliente, int idFactura);
+int eliminarFactura(int idFactura);
 
 #endif

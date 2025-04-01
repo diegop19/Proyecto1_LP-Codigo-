@@ -70,7 +70,6 @@ void registroDeProductosMenu() {
     } while (opcion != 3);
 }
 
-// Función para abrir el explorador de archivos y seleccionar un archivo
 char* abrirExploradorArchivos() {
     OPENFILENAME ofn;           
     char rutaArchivo[256] = ""; 

@@ -27,13 +27,15 @@ char* obtenerInput() {
 
 void menuGeneral() {
     int opcion;
+    int c;
     do {
         printf("=== Menú General ===\n");
         printf("1. Consulta de catálogo\n");
         printf("2. Cotizar\n");
         printf("3. Modificar cotización\n");
         printf("4. Facturar\n");
-        printf("5. Volver al Menú Principal\n");
+        printf("5. Agregar Cliente\n");
+        printf("6. Volver al Menú Principal\n");
         printf("Seleccione una opción: ");
         scanf("%d", &opcion);
 
@@ -51,13 +53,26 @@ void menuGeneral() {
                 facturar();
                 break;
             case 5:
+                while ((c = getchar()) != '\n' && c != EOF) {}
+                printf("Inserte la cedula del cliente: ");
+                int cedula;
+                scanf("%i", &cedula);
+                while ((c = getchar()) != '\n' && c != EOF) {}
+                printf("\nInserte el nombre de la persona: ");
+                char*nombre = obtenerInput();
+                printf("\nInserte el apellido de la persona: ");
+                char* apellido = obtenerInput();
+                agregarClienteBD(cedula,nombre,apellido);
+                break;
+
+            case 6:
                 printf("Volviendo al Menú Principal...\n");
                 break;
             default:
                 printf("Opción no válida. Intente de nuevo.\n");
                 break;
         }
-    } while (opcion != 5);
+    } while (opcion != 6);
 }
 
 void consultarCatalogo() {
@@ -150,19 +165,25 @@ void facturar() {
     scanf("%i", &numCotizacion);
     char c;
     while ((c = getchar()) != '\n' && c != EOF) {}
-    if(actualizarEstadoCotizacionBD(numCotizacion) == 0){
-        producto* listaElementos = datosCotizacion(numCotizacion);
-        if(listaElementos != NULL){
-            int numFactura = obtenerNumeroFactura();
-            verificarStock(listaElementos);
-            double subtotal = calcularTotal(listaElementos);
-            double total = subtotal*1.13;
-            actualizarFactura(numFactura, subtotal, total);
-            facturarProductos(numFactura, listaElementos);
+    int numCedula;
+    printf("\nInserte el numero de cedula del cliente: ");
+    scanf("%i", &numCedula);
+    while ((c = getchar()) != '\n' && c != EOF) {}
+
+    producto* listaElementos = datosCotizacion(numCotizacion);
+    if(listaElementos != NULL){
+        int numFactura = obtenerNumeroFactura();
+        if(agregarFacturaACliente(numCedula, numFactura) == 1 && actualizarEstadoCotizacionBD(numCotizacion) == 0){
+                verificarStock(listaElementos);
+                double subtotal = calcularTotal(listaElementos);
+                double total = subtotal*1.13;
+                actualizarFactura(numFactura, subtotal, total);
+                facturarProductos(numFactura, listaElementos);
+        }else{
+                eliminarFactura(numFactura);
+                printf("\nEl cliente ingresado no existe o Ya se ha facturado esta cotizacion, abortando...\n");
+            }
         }
-    }else{
-        printf("Ya se ha facturado esta cotizacion...\n");
-    }
 }
 
 void mostrarEstadisticas() {
