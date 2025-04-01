@@ -82,10 +82,11 @@ void insertarProductoBD(char *id, char *nombre, char *familia, double costo, dou
             MYSQL_STMT *stmt;
             const char* consulta = "CALL insertar_producto(?,?,?,?,?,?)";
             stmt = mysql_stmt_init(conexion);
-
+            
             if(mysql_stmt_prepare(stmt, consulta, strlen(consulta))){
                   printf("Error al preparar la consulta: %s\n", mysql_stmt_error(stmt));
             }
+            
             memset(bind, 0, sizeof(bind));
             
             bind[0].buffer_type = MYSQL_TYPE_STRING;
@@ -109,18 +110,19 @@ void insertarProductoBD(char *id, char *nombre, char *familia, double costo, dou
             bind[5].buffer_type = MYSQL_TYPE_LONG;
             bind[5].buffer = &cantidad_stock;
             
-
+            
             if(mysql_stmt_bind_param(stmt, bind) != 0){
                   printf("Error al vincular parámetros: %s\n", mysql_stmt_error(stmt));
                   mysql_stmt_close(stmt);
                   mysql_close(conexion);
             }
+            
             if(mysql_stmt_execute(stmt) != 0){
                   printf("Error al ejecutar el procedimiento: %s\n", mysql_stmt_error(stmt));
                   mysql_stmt_close(stmt);
                   mysql_close(conexion);
-
             }else{
+                
                   printf("Producto agregado exitosamente\n");
                   mysql_stmt_close(stmt);
                   mysql_close(conexion);
@@ -497,54 +499,43 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
   }
 
   // Estadisticas
-
+  void mostrarResultado(const char* consulta, const char* mensaje, int esDecimal) {
+    MYSQL *conexion;
+    if(conectar(&conexion)) return;
+    if(mysql_query(conexion, consulta)) {
+        printf("Error: %s\n", mysql_error(conexion));
+        return;
+    }
+    
+    MYSQL_RES *resultado = mysql_store_result(conexion);
+    if(resultado) {
+        MYSQL_ROW fila = mysql_fetch_row(resultado);
+        if(fila && fila[0]) {
+            if(esDecimal) {
+                printf("%s: $%.2f\n", mensaje, atof(fila[0]));
+            } else {
+                printf("%s: %s\n", mensaje, fila[0]);
+            }
+        } else {
+            printf("%s: No se encontraron datos\n", mensaje);
+        }
+        mysql_free_result(resultado);
+    }
+    
+    // Consumir cualquier resultado adicional
+    while(mysql_next_result(conexion) == 0) {
+        MYSQL_RES *res_extra = mysql_store_result(conexion);
+        if(res_extra) mysql_free_result(res_extra);
+    }
+}
   void mostrarEstadisticasCotizaciones() {
-      MYSQL *conexion;
-      if(conectar(&conexion)) return;
-  
-      printf("\n=== Estadisticas de cotizaciones ===\n");
-      
-      // Cotizaciones pendientes
-      if(mysql_query(conexion, "CALL sp_obtener_cotizaciones_pendientes()")) {
-          printf("Error: %s\n", mysql_error(conexion));
-      } else {
-          MYSQL_RES *resultado = mysql_store_result(conexion);
-          if(resultado != NULL) {
-              MYSQL_ROW fila = mysql_fetch_row(resultado);
-              printf("Cotizaciones pendientes: %s\n", fila[0]);
-              mysql_free_result(resultado);
-          }else{
-            printf("No se encontraron cotizaciones pentiendes\n");
-          }
-      }
-  
-      // Cotizaciones facturadas
-      if(mysql_query(conexion, "CALL sp_obtener_cotizaciones_facturadas()")) {
-          printf("Error: %s\n", mysql_error(conexion));
-      } else {
-          MYSQL_RES *resultado = mysql_store_result(conexion);
-          if(resultado != NULL) {
-              MYSQL_ROW fila = mysql_fetch_row(resultado);
-              printf("Cotizaciones facturadas: %s\n", fila[0]);
-              mysql_free_result(resultado);
-          }else{
-            printf("No se encontraron cotizaciones pagadas\n");
-          }
-      }
-  
-      // Promedio de compra
-      if(mysql_query(conexion, "CALL sp_obtener_promedio_compras()")) {
-          printf("Error: %s\n", mysql_error(conexion));
-      } else {
-          MYSQL_RES *resultado = mysql_store_result(conexion);
-          if(resultado) {
-              MYSQL_ROW fila = mysql_fetch_row(resultado);
-              printf("Promedio de compra: $%.2f\n", atof(fila[0]));
-              mysql_free_result(resultado);
-          }
-      }
-  
-      mysql_close(conexion);
+    printf("\n=== Estadisticas de cotizaciones ===\n");
+    mostrarResultado("CALL sp_obtener_cotizaciones_pendientes()", 
+                    "Cotizaciones pendientes", 0);
+    mostrarResultado("CALL sp_obtener_cotizaciones_facturadas()", 
+                    "Cotizaciones facturadas", 0);
+    mostrarResultado("CALL sp_obtener_promedio_compras()", 
+                    "Promedio de compra", 1);
   }
 
   void mostrarTopProductos() {
@@ -1021,5 +1012,180 @@ void actualizarFactura(int identificadorFactura, double subtotal, double total){
     mysql_stmt_close(stmt);
       }
 }
+void desplegarFacturas() {
+    // Variables para la conexión a la base de datos
+    MYSQL *conn;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+
+    // Conectar a la base de datos
+    int error = conectar(&conn);
+    if (error) {
+        return;  // Salir si la conexión falla
+    }
+
+    // Ejecutar la consulta SELECT
+    if (mysql_query(conn, "SELECT * FROM FACTURA")) {
+        fprintf(stderr, "Error en la consulta: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(1);
+    }
+
+    // Obtener los resultados de la consulta
+    res = mysql_store_result(conn);
+    if (res == NULL) {
+        fprintf(stderr, "Error al obtener los resultados: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(1);
+    }
+
+    // Obtener el número de columnas
+    int num_fields = mysql_num_fields(res);
+
+    // Mostrar los nombres de las columnas (cabecera)
+    printf("%-15s %-15s %-15s %-15s\n", "ID_FACTURA", "FECHA", "SUBTOTAL", "TOTAL");
+    printf("------------------------------------------------------------\n");
+
+    // Mostrar los resultados
+    while ((row = mysql_fetch_row(res))) {
+        printf("%-10s %-20s %-15s %-20s\n", 
+            row[0] ? row[0] : "NULL", 
+            row[1] ? row[1] : "NULL", 
+            row[2] ? row[2] : "NULL", 
+            row[3] ? row[3] : "NULL");
+    }
+
+    // Liberar recursos
+    mysql_free_result(res);
+    mysql_close(conn);
+}
+
+void desplegarDetallesFactura(int factura_id) {
+    MYSQL *conn;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+
+    // Conectar a la base de datos
+    int error = conectar(&conn);
+    if (error) {
+        return;  // Salir si la conexión falla
+    }
+
+    // Ejecutar el procedimiento almacenado
+    char query[256];
+    snprintf(query, sizeof(query), "CALL desplegarProductosFactura(%d);", factura_id);
+
+    if (mysql_query(conn, query)) {
+        fprintf(stderr, "Error al ejecutar el procedimiento: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(1);
+    }
+
+    // Procesar el primer conjunto de resultados (información de la factura)
+    res = mysql_store_result(conn);
+    if (res == NULL) {
+        fprintf(stderr, "Error al obtener los resultados de la primera consulta: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(1);
+    }
+
+    // Mostrar los resultados de la primera consulta (factura)
+    printf("Datos de la factura:\n");
+    printf("%-15s %-20s %-15s %-15s\n", "ID_FACTURA", "FECHA", "SUBTOTAL", "TOTAL");
+    printf("------------------------------------------------------------\n");
+    
+    while ((row = mysql_fetch_row(res))) {
+        printf("%-15s %-20s %-15s %-15s\n", 
+            row[0] ? row[0] : "NULL", 
+            row[1] ? row[1] : "NULL", 
+            row[2] ? row[2] : "NULL", 
+            row[3] ? row[3] : "NULL");
+    }
+
+    mysql_free_result(res);
+
+    // Mover al siguiente conjunto de resultados
+    if (mysql_next_result(conn) != 0) {
+        fprintf(stderr, "Error al obtener el siguiente conjunto de resultados: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(1);
+    }
+
+    // Procesar el segundo conjunto de resultados (productos de la factura)
+    res = mysql_store_result(conn);
+    if (res == NULL) {
+        fprintf(stderr, "Error al obtener los resultados de la segunda consulta: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(1);
+    }
+
+    // Mostrar los resultados de la segunda consulta (productos)
+    printf("\nProductos de la factura:\n");
+    printf("%-15s %-30s %-10s %-15s\n", "ID_PRODUCTO", "NOMBRE", "CANTIDAD", "PRECIO_UNITARIO");
+    printf("------------------------------------------------------------\n");
+
+    while ((row = mysql_fetch_row(res))) {
+        printf("%-15s %-30s %-10s %-15s\n", 
+            row[0] ? row[0] : "NULL", 
+            row[1] ? row[1] : "NULL", 
+            row[2] ? row[2] : "NULL", 
+            row[3] ? row[3] : "NULL");
+    }
+
+    mysql_free_result(res);
+
+    // Asegurarse de que no hay más conjuntos de resultados
+    while (mysql_next_result(conn) == 0) {
+        res = mysql_store_result(conn);
+        mysql_free_result(res);
+    }
+
+    // Cerrar la conexión
+    mysql_close(conn);
+}
+
+
+int actualizarEstadoCotizacionBD(int numCotizacion) {
+    MYSQL *conn;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    int resultado = -2;
+
+    // Conectar a la base de datos (asumiendo que tienes una función conectar() definida)
+    if (conectar(&conn) != 0) {
+        fprintf(stderr, "Error al conectar a la base de datos\n");
+        return resultado;
+    }
+
+    // Preparar la llamada al procedimiento almacenado
+    char query[128];
+    snprintf(query, sizeof(query), "CALL actualizarEstadoCotizacion(%d, @resultado);", numCotizacion);
+
+    // Ejecutar el procedimiento
+    if (mysql_query(conn, query)) {
+        fprintf(stderr, "Error al llamar al procedimiento: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        return -2;
+    }
+
+    // Obtener el resultado
+    if (mysql_query(conn, "SELECT @resultado;")) {
+        fprintf(stderr, "Error al obtener el resultado: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        return -2;
+    }
+
+    res = mysql_store_result(conn);
+    if (res && (row = mysql_fetch_row(res))) {
+        resultado = atoi(row[0]); // Convertir el string a entero
+    }
+
+    // Liberar recursos
+    if (res) mysql_free_result(res);
+    mysql_close(conn);
+
+    return resultado;
+}
+
 
   

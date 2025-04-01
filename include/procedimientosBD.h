@@ -27,5 +27,9 @@ int obtenerCantidadDisponible(const char *idProducto);
 void rebajarStock(const char *codigoProducto, int cantidadRebajar);
 void actualizarFactura(int identificadorFactura, double subtotal, double total);
 void facturarProductos(int numCotizacion,producto* lista);
+void desplegarFacturas();
+void desplegarDetallesFactura(int factura_id);
+int actualizarEstadoCotizacionBD(int numCotizacion);
+void mostrarResultado(const char* consulta, const char* mensaje, int esDecimal);
 
 #endif

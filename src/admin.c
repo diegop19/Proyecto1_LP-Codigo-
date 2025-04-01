@@ -41,7 +41,7 @@ void menuAdministrativo() {
             default:
                 printf("Opción no válida. Intente de nuevo.\n");
         }
-    } while (opcion != 5);
+    } while (opcion != 6);
 }
 
 void registroDeProductosMenu() {
@@ -276,8 +276,34 @@ void cargarInventario() {
 }
 
 void consultarFacturas() {
-
-
+    int eleccion;
+    char c;
+    do{
+        printf("======Seleccione una opcion======\n");
+        printf("1. Ver facturas\n");
+        printf("2. Ver detalles de factura\n");
+        printf("3. Atras\n");
+        printf("Seleccione una opcion:\n");
+        scanf("%i",&eleccion);
+        switch(eleccion){
+            case 1:
+                desplegarFacturas();
+            break;
+            case 2:
+                int numFactura;
+                printf("Ingrese el numero de factura\n");
+                scanf("%i", &numFactura);
+                printf("Aquí\n");
+                desplegarDetallesFactura(numFactura);
+                break;
+            case 3:
+                break;
+            default:
+                printf("Seleccione una opccion valida\n");
+                break;
+        }
+        
+    }while(eleccion != 3);
 }
 
 
