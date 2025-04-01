@@ -425,6 +425,62 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       mysql_close(conn);
   }
 
+
+
+  int eliminarProductoBD(char* identificador) {
+      MYSQL *conexion;
+      int resultado = 0;
+      
+      if(conectar(&conexion)) {
+          return 0; 
+      }
+      
+      MYSQL_STMT *stmt = mysql_stmt_init(conexion);
+      if(!stmt) {
+          mysql_close(conexion);
+          return 0;
+      }
+      
+      const char *consulta = "CALL removerProducto(?)";
+      if(mysql_stmt_prepare(stmt, consulta, strlen(consulta))) {
+          fprintf(stderr, "Error al preparar consulta: %s\n", mysql_error(conexion));
+          mysql_stmt_close(stmt);
+          mysql_close(conexion);
+          return 0;
+      }
+      
+      MYSQL_BIND bind[1];
+      memset(bind, 0, sizeof(bind));
+      
+      bind[0].buffer_type = MYSQL_TYPE_STRING;
+      bind[0].buffer = identificador;
+      bind[0].buffer_length = strlen(identificador);
+      
+      if(mysql_stmt_bind_param(stmt, bind)) {
+          fprintf(stderr, "Error al vincular parámetros: %s\n", mysql_error(conexion));
+          mysql_stmt_close(stmt);
+          mysql_close(conexion);
+          return 0;
+      }
+      
+      if(mysql_stmt_execute(stmt)) {
+          unsigned int err_num = mysql_stmt_errno(stmt);
+          if(err_num == 1451) { 
+              printf("No se puede eliminar: producto está en uso\n");
+          } else {
+              fprintf(stderr, "Error al ejecutar: %s\n", mysql_stmt_error(stmt));
+          }
+      } else {
+          if(mysql_stmt_affected_rows(stmt) > 0) {
+              resultado = 1; 
+          }
+      }
+      
+      mysql_stmt_close(stmt);
+      mysql_close(conexion);
+      return resultado;
+  }
+
   // Estadisticas
 
   void mostrarEstadisticasCotizaciones() {

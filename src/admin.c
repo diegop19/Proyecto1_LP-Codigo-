@@ -143,13 +143,6 @@ void registrarFamiliaProductos() {
     printf("Proceso de registro de familias completado.\n");
 }
 
-// auxiliar para la base de datos    HACE FALTA VERIFICAR QUE LA FAMILIA EXISTA
-void insertarProducto(char *id, char *nombre, char *familia, float costo, float precio, int cantidad_stock) {
-    printf("Insertando producto: ID = %s, Nombre = %s, Familia = %s, Costo = %.2f, Precio = %.2f, Stock = %d\n",
-           id, nombre, familia, costo, precio, cantidad_stock);
-    
-}
-
 void registrarProductos() {
     char *rutaArchivo; 
     FILE *archivo;      
@@ -217,8 +210,25 @@ void registrarProductos() {
 }
 
 
-void eliminarProducto(){
-
+void eliminarProducto() {
+    char identificador[50];
+    
+    printf("\n=== Eliminar Producto ===\n");
+    printf("Ingrese el identificador del producto a eliminar: ");
+    scanf("%49s", identificador);
+    
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    
+    if(eliminarProductoBD(identificador)) {
+        printf("\nProducto con ID '%s' eliminado exitosamente.\n", identificador);
+    } else {
+        printf("\nError: No se pudo eliminar el producto con ID '%s'\n", identificador);
+        printf("Posibles causas:\n");
+        printf("- El producto no existe\n");
+        printf("- Está asociado a cotizaciones/facturas\n");
+        printf("- Problema de conexión con la BD\n");
+    }
 }
 
 void cargarInventario() {
