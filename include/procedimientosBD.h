@@ -21,4 +21,5 @@ producto* datosCotizacion(int numCotizaion);
 producto* crearProducto(const char* codigo, const char* nombre, int cantidad, double precio) ;
 int actualizarCotizacionBD(int idCotizacion, producto* lista);
 void eliminarProductosLista(int idCotizacion, codigoProducto* lista);
+int eliminarProductoBD(char* identificador);
 #endif
