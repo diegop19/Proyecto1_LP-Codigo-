@@ -4,6 +4,12 @@
 #include <stdio.h>
 #include "estructuras.h"
 
+/**
+ * crearProducto
+ * Entrada: codigo (string), nombre (string), cantidad (entero), precio (double)
+ * Salida: Puntero a estructura producto
+ * Descripción: Crea y devuelve una nueva estructura producto con memoria dinámica
+ */
 producto* crearProducto(const char* codigo, const char* nombre, int cantidad, double precio) {
       producto* nuevo = (producto*)malloc(sizeof(producto));
       if (nuevo == NULL) {
@@ -19,6 +25,12 @@ producto* crearProducto(const char* codigo, const char* nombre, int cantidad, do
       return nuevo;
   }
 
+/**
+ * conectar
+ * Entrada: conexion (doble puntero MYSQL)
+ * Salida: Entero (0 éxito, 1 error)
+ * Descripción: Establece conexión con la base de datos MySQL
+ */
 int conectar(MYSQL **conexion){
     int error;
     *conexion = mysql_init(NULL);
@@ -30,6 +42,13 @@ int conectar(MYSQL **conexion){
     }
     return error;
 }
+
+/**
+ * insertarFamiliaBD
+ * Entrada: idFamilia (string), descripcion (string)
+ * Salida: Ninguna
+ * Descripción: Inserta una nueva familia de productos en la base de datos
+ */
 void insertarFamiliaBD(char* idFamilia, char* descripcion){
       MYSQL *conexion;
       int error;
@@ -65,11 +84,14 @@ void insertarFamiliaBD(char* idFamilia, char* descripcion){
             mysql_stmt_close(stmt);
             mysql_close(conexion);
       }
-      
-
-
 }
 
+/**
+ * insertarProductoBD
+ * Entrada: id (string), nombre (string), familia (string), costo (double), precio (double), cantidad_stock (entero)
+ * Salida: Ninguna
+ * Descripción: Inserta un nuevo producto en la base de datos con todos sus atributos
+ */
 void insertarProductoBD(char *id, char *nombre, char *familia, double costo, double precio, int cantidad_stock){
       printf("-----------------------------------------------------------\n");
       printf("Insertando producto: ID = %s, Nombre = %s, Familia = %s, Costo = %.2f, Precio = %.2f, Stock = %d\n",
@@ -127,12 +149,15 @@ void insertarProductoBD(char *id, char *nombre, char *familia, double costo, dou
                   mysql_stmt_close(stmt);
                   mysql_close(conexion);
             }
-            
-
-        }
-
+      }
 }
 
+/**
+ * actualizarStockBD
+ * Entrada: id (string), cantidad (entero)
+ * Salida: Ninguna
+ * Descripción: Actualiza el stock de un producto sumando/restableciendo la cantidad especificada
+ */
 void actualizarStockBD(char* id, int cantidad){
       MYSQL *conexion;
       int error;
@@ -179,10 +204,15 @@ void actualizarStockBD(char* id, int cantidad){
             mysql_close(conexion);
 
             }
-
       }
 }
 
+/**
+ * desplegarProductos
+ * Entrada: Ninguna
+ * Salida: Ninguna
+ * Descripción: Muestra en consola todos los productos registrados en la base de datos
+ */
 void desplegarProductos(){
       MYSQL *conexion;
       MYSQL_RES *resultado;
@@ -216,9 +246,15 @@ void desplegarProductos(){
                   mysql_free_result(resultado);
             }
             mysql_close(conexion);
-
       }
 }
+
+/**
+ * filtrarBusqueda
+ * Entrada: identificador (string)
+ * Salida: Ninguna
+ * Descripción: Muestra productos filtrados por familia en la base de datos
+ */
 void filtrarBusqueda(char* identificador) {
       MYSQL *conexion;
       int error;
@@ -258,7 +294,14 @@ void filtrarBusqueda(char* identificador) {
             mysql_free_result(res);
             mysql_close(conexion);
       }
-  }
+}
+
+/**
+ * obtenerProductoIndividual
+ * Entrada: codigo (string)
+ * Salida: Puntero a estructura producto
+ * Descripción: Busca y devuelve un producto específico por su código
+ */
 producto* obtenerProductoIndividual(char* codigo) {
       producto productoEncontrado = {0};
       MYSQL *conn;
@@ -324,10 +367,14 @@ producto* obtenerProductoIndividual(char* codigo) {
 
     return p;
       }
-      
-  }
-  
-  
+}
+
+/**
+ * guardarDatosCotizacion
+ * Entrada: lista (puntero a estructura producto)
+ * Salida: Ninguna
+ * Descripción: Guarda una cotización y sus productos asociados en la base de datos
+ */
 void guardarDatosCotizacion(producto* lista){
       MYSQL *conn;
       int error;
@@ -392,9 +439,14 @@ void guardarDatosCotizacion(producto* lista){
       mysql_stmt_close(stmt);
       mysql_close(conn);
       }
-
 }
 
+/**
+ * agregarProductosCot
+ * Entrada: numCotizacion (entero), lista (puntero a estructura producto)
+ * Salida: Ninguna
+ * Descripción: Agrega los productos de una cotización a la base de datos
+ */
 void agregarProductosCot(int numCotizacion, producto* lista) {
       MYSQL *conn;
       MYSQL_RES *res;
@@ -440,11 +492,15 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
           actual = actual->siguiente;
       }
       mysql_close(conn);
-  }
+}
 
-
-
-  int eliminarProductoBD(char* identificador) {
+/**
+ * eliminarProductoBD
+ * Entrada: identificador (string)
+ * Salida: Entero (1 éxito, 0 error)
+ * Descripción: Elimina un producto de la base de datos si no está asociado a facturas
+ */
+int eliminarProductoBD(char* identificador) {
       MYSQL *conexion;
       int resultado = 0;
       
@@ -496,10 +552,15 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       mysql_stmt_close(stmt);
       mysql_close(conexion);
       return resultado;
-  }
+}
 
-
-  void mostrarResultado(const char* consulta, const char* mensaje, int esDecimal) {
+/**
+ * mostrarResultado
+ * Entrada: consulta (string), mensaje (string), esDecimal (entero)
+ * Salida: Ninguna
+ * Descripción: Muestra el resultado de una consulta SQL en consola
+ */
+void mostrarResultado(const char* consulta, const char* mensaje, int esDecimal) {
     MYSQL *conexion;
     if(conectar(&conexion)) return;
     if(mysql_query(conexion, consulta)) {
@@ -528,7 +589,14 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
         if(res_extra) mysql_free_result(res_extra);
     }
 }
-  void mostrarEstadisticasCotizaciones() {
+
+/**
+ * mostrarEstadisticasCotizaciones
+ * Entrada: Ninguna
+ * Salida: Ninguna
+ * Descripción: Muestra estadísticas de cotizaciones (pendientes, facturadas, promedio)
+ */
+void mostrarEstadisticasCotizaciones() {
     printf("\n=== Estadisticas de cotizaciones ===\n");
     mostrarResultado("CALL sp_obtener_cotizaciones_pendientes()", 
                     "Cotizaciones pendientes", 0);
@@ -536,9 +604,15 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
                     "Cotizaciones facturadas", 0);
     mostrarResultado("CALL sp_obtener_promedio_compras()", 
                     "Promedio de compra", 1);
-  }
+}
 
-  void mostrarTopProductos() {
+/**
+ * mostrarTopProductos
+ * Entrada: Ninguna
+ * Salida: Ninguna
+ * Descripción: Muestra el top 5 de productos más vendidos
+ */
+void mostrarTopProductos() {
       MYSQL *conexion;
       if(conectar(&conexion)) return;
   
@@ -563,14 +637,21 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       }
   
       mysql_close(conexion);
-  }
+}
 
-  void mostrarVentasPorFamilia() {
+/**
+ * mostrarVentasPorFamilia
+ * Entrada: Ninguna
+ * Salida: Ninguna
+ * Descripción: Muestra ventas agrupadas por familia de productos
+ */
+void mostrarVentasPorFamilia() {
       MYSQL *conexion;
       if(conectar(&conexion)) return;
   
       printf("\n=== Ventas por familia ===\n");
-
+      
+      // Producto más vendido por familia
       printf("\nProducto más vendido por familia:\n");
       if(mysql_query(conexion, "CALL obtener_producto_popular_por_familia()")) {
           printf("Error: %s\n", mysql_error(conexion));
@@ -607,8 +688,15 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       }
   
       mysql_close(conexion);
-  }
-  producto* datosCotizacion(int numCotizacion){
+}
+
+/**
+ * datosCotizacion
+ * Entrada: numCotizacion (entero)
+ * Salida: Puntero a estructura producto
+ * Descripción: Recupera los productos asociados a una cotización específica
+ */
+producto* datosCotizacion(int numCotizacion){
       MYSQL* conexion;
       MYSQL_RES* res;
       MYSQL_ROW row;
@@ -663,11 +751,16 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
             mysql_close(conexion);
             
             return lista;
-
       }
-  }
+}
 
-  int actualizarCotizacionBD(int idCotizacion, producto* lista) {
+/**
+ * actualizarCotizacionBD
+ * Entrada: idCotizacion (entero), lista (puntero a estructura producto)
+ * Salida: Entero (0 éxito, 1 error)
+ * Descripción: Actualiza los productos de una cotización existente
+ */
+int actualizarCotizacionBD(int idCotizacion, producto* lista) {
       MYSQL* conexion;
       int error = 0;
       if (conectar(&conexion)) {
@@ -693,9 +786,15 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
       
       mysql_close(conexion);
       return error;
-  }
+}
 
-  void eliminarProductosLista(int idCotizacion, codigoProducto* lista) {
+/**
+ * eliminarProductosLista
+ * Entrada: idCotizacion (entero), lista (puntero a estructura codigoProducto)
+ * Salida: Ninguna
+ * Descripción: Elimina productos específicos de una cotización
+ */
+void eliminarProductosLista(int idCotizacion, codigoProducto* lista) {
       MYSQL *conn;
       MYSQL_STMT *stmt;
       MYSQL_BIND params[2];
@@ -737,9 +836,15 @@ void agregarProductosCot(int numCotizacion, producto* lista) {
         actual = actual->siguiente;
     }
     mysql_stmt_close(stmt);
-
       }
 }
+
+/**
+ * obtenerNumeroFactura
+ * Entrada: Ninguna
+ * Salida: Entero (número de factura o -1 en error)
+ * Descripción: Genera y devuelve un nuevo número de factura secuencial
+ */
 int obtenerNumeroFactura() {
       MYSQL *conn;
       MYSQL_RES *res;
@@ -771,6 +876,12 @@ int obtenerNumeroFactura() {
       }
 }
 
+/**
+ * facturarProductos
+ * Entrada: idFactura (entero), lista (puntero a estructura producto)
+ * Salida: Ninguna
+ * Descripción: Asocia productos a una factura en la base de datos
+ */
 void facturarProductos(int idFactura, producto* lista) {
       MYSQL *conn;
       int error;
@@ -857,7 +968,14 @@ void facturarProductos(int idFactura, producto* lista) {
           mysql_stmt_close(stmt);
           mysql_close(conn);
       }
-  }
+}
+
+/**
+ * obtenerCantidadDisponible
+ * Entrada: idProducto (string)
+ * Salida: Entero (cantidad disponible o -1 en error)
+ * Descripción: Consulta el stock disponible de un producto
+ */
 int obtenerCantidadDisponible(const char *idProducto){
       MYSQL *conn;
       int error = conectar(&conn);
@@ -893,8 +1011,14 @@ int obtenerCantidadDisponible(const char *idProducto){
 
             return cantidadEnStock;  
       }
-
 }
+
+/**
+ * rebajarStock
+ * Entrada: codigoProducto (string), cantidadRebajar (entero)
+ * Salida: Ninguna
+ * Descripción: Reduce el stock de un producto en la cantidad especificada
+ */
 void rebajarStock(const char *codigoProducto, int cantidadRebajar){
       MYSQL *conn;
       int error = conectar(&conn);
@@ -942,12 +1066,15 @@ void rebajarStock(const char *codigoProducto, int cantidadRebajar){
 
 
     mysql_stmt_close(stmt);
-
-
       }
-
 }
 
+/**
+ * actualizarFactura
+ * Entrada: identificadorFactura (entero), subtotal (double), total (double)
+ * Salida: Ninguna
+ * Descripción: Actualiza los montos subtotal y total de una factura existente
+ */
 void actualizarFactura(int identificadorFactura, double subtotal, double total){
       MYSQL *conn;
       int error;
@@ -994,8 +1121,14 @@ void actualizarFactura(int identificadorFactura, double subtotal, double total){
             mysql_stmt_close(stmt);
         }
 }
-void desplegarFacturas() {
 
+/**
+ * desplegarFacturas
+ * Entrada: Ninguna
+ * Salida: Ninguna
+ * Descripción: Muestra en consola todas las facturas registradas
+ */
+void desplegarFacturas() {
     MYSQL *conn;
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -1039,6 +1172,12 @@ void desplegarFacturas() {
     mysql_close(conn);
 }
 
+/**
+ * desplegarDetallesFactura
+ * Entrada: factura_id (entero)
+ * Salida: Ninguna
+ * Descripción: Muestra los detalles completos de una factura específica
+ */
 void desplegarDetallesFactura(int factura_id) {
     MYSQL *conn;
     MYSQL_RES *res;
@@ -1119,7 +1258,12 @@ void desplegarDetallesFactura(int factura_id) {
     mysql_close(conn);
 }
 
-
+/**
+ * actualizarEstadoCotizacionBD
+ * Entrada: numCotizacion (entero)
+ * Salida: Entero (resultado de la operación)
+ * Descripción: Actualiza el estado de una cotización a "Facturada"
+ */
 int actualizarEstadoCotizacionBD(int numCotizacion) {
     MYSQL *conn;
     MYSQL_RES *res;
@@ -1162,7 +1306,12 @@ int actualizarEstadoCotizacionBD(int numCotizacion) {
     return resultado;
 }
 
-
+/**
+ * agregarClienteBD
+ * Entrada: numCedula (entero), nombre (string), apellido (string)
+ * Salida: Entero (resultado de la operación)
+ * Descripción: Registra un nuevo cliente en la base de datos
+ */
 int agregarClienteBD(int numCedula, const char *nombre, const char *apellido){
     MYSQL *conn;
     MYSQL_ROW row;
@@ -1212,6 +1361,12 @@ char query[512];
     return resultado;
 }
 
+/**
+ * agregarFacturaACliente
+ * Entrada: idCliente (entero), idFactura (entero)
+ * Salida: Entero (resultado de la operación)
+ * Descripción: Asocia una factura a un cliente en la base de datos
+ */
 int agregarFacturaACliente(int idCliente, int idFactura){
     MYSQL *conn;
     if (conectar(&conn) != 0) {
@@ -1253,6 +1408,12 @@ int agregarFacturaACliente(int idCliente, int idFactura){
     return resultado;
 }
 
+/**
+ * eliminarFactura
+ * Entrada: idFactura (entero)
+ * Salida: Entero (1 éxito, 0 error)
+ * Descripción: Elimina una factura de la base de datos
+ */
 int eliminarFactura(int idFactura){
     MYSQL *conn;
     if (conectar(&conn) != 0) {
@@ -1268,6 +1429,13 @@ int eliminarFactura(int idFactura){
     }
     return 1;
 }
+
+/**
+ * validarCredenciales
+ * Entrada: nombreUsuario (string), clave (string)
+ * Salida: Entero (1 válido, 0 inválido, -1 error)
+ * Descripción: Verifica las credenciales de un usuario administrativo
+ */
 int validarCredenciales(char* nombreUsuario, char* clave){
     MYSQL *conn;
     if (conectar(&conn) != 0) {

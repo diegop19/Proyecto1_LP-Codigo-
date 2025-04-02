@@ -1,5 +1,11 @@
 #include "listas.h"
 
+/**
+ * verificarExistencia
+ * Entrada: codigo (string), cantidad (entero), lista (doble puntero a producto)
+ * Salida: Ninguna
+ * Descripción: Verifica si un producto existe y lo agrega o actualiza en la lista de cotización
+ */
 void verificarExistencia(char* codigo, int cantidad, producto** lista){
     producto* nuevoACotizar = obtenerProductoIndividual(codigo);
     if(nuevoACotizar == NULL){
@@ -21,9 +27,15 @@ void verificarExistencia(char* codigo, int cantidad, producto** lista){
             nuevoACotizar->cantidadProducto = cantidad;
             insertarProductoCotizacion(nuevoACotizar, lista);
        }
+    }
 }
 
-}
+/**
+ * insertarProductoCotizacion
+ * Entrada: nuevoNodo (puntero a producto), lista (doble puntero a producto)
+ * Salida: Ninguna
+ * Descripción: Inserta un nuevo producto al final de la lista de cotización
+ */
 void insertarProductoCotizacion(producto* nuevoNodo, producto** lista){
     nuevoNodo->siguiente = NULL;
     if (*lista == NULL) {
@@ -37,6 +49,13 @@ void insertarProductoCotizacion(producto* nuevoNodo, producto** lista){
     }
     printf("Producto insertado con éxito a la cotizacion\n");
 }
+
+/**
+ * removerProductoCot
+ * Entrada: codigo (string), lista (doble puntero a producto)
+ * Salida: Ninguna
+ * Descripción: Elimina un producto de la lista de cotización por su código
+ */
 void removerProductoCot(char* codigo, producto** lista) {
     if (*lista == NULL) {
         printf("La lista está vacía.\n");
@@ -64,6 +83,13 @@ void removerProductoCot(char* codigo, producto** lista) {
 
     printf("Producto con código %s no encontrado.\n", codigo);
 }
+
+/**
+ * reducirAumentarCantidades
+ * Entrada: cantidad (entero), idProducto (string), lista (puntero a producto)
+ * Salida: Ninguna
+ * Descripción: Ajusta la cantidad de un producto en la cotización (suma/resta)
+ */
 void reducirAumentarCantidades(int cantidad, char* idProducto, producto* lista) {
     producto* actual = lista;
     int productoEncontrado = 0; 
@@ -87,6 +113,13 @@ void reducirAumentarCantidades(int cantidad, char* idProducto, producto* lista) 
         printf("Error: Producto con código %s no encontrado en la lista.\n", idProducto);
     }
 }
+
+/**
+ * agregarCodigoEliminar
+ * Entrada: lista (doble puntero a codigoProducto), codigo (string)
+ * Salida: Ninguna
+ * Descripción: Agrega un código de producto a la lista de códigos para eliminar
+ */
 void agregarCodigoEliminar(codigoProducto** lista, const char* codigo) {
     if (codigo == NULL || strlen(codigo) == 0) {
         return;
@@ -106,6 +139,12 @@ void agregarCodigoEliminar(codigoProducto** lista, const char* codigo) {
     *lista = nuevo;
 }
 
+/**
+ * verificarStock
+ * Entrada: listaElementos (puntero a producto)
+ * Salida: Ninguna
+ * Descripción: Verifica y ajusta las cantidades de productos según el stock disponible
+ */
 void verificarStock(producto* listaElementos) {
     producto* actual = listaElementos;
 
@@ -132,6 +171,13 @@ void verificarStock(producto* listaElementos) {
         actual = actual->siguiente;
     }
 }
+
+/**
+ * calcularTotal
+ * Entrada: listaElementos (puntero a producto)
+ * Salida: double (total calculado)
+ * Descripción: Calcula el total de la cotización sumando precios*cantidades
+ */
 double calcularTotal(producto *listaElementos) {
     double total = 0.0;
     producto *actual = listaElementos;
