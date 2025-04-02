@@ -470,4 +470,278 @@ END //
 DELIMITER ;
 
 
+DELIMITER $$
+CREATE PROCEDURE actualizarEstadoCotizacion(
+    IN numCotizacion INT, 
+    OUT resultado INT
+)
+BEGIN
+    DECLARE estadoActual BOOLEAN;
 
+    SELECT estadoCotizacion INTO estadoActual
+    FROM COTIZACION
+    WHERE numeroCotizacion = numCotizacion;
+    
+    IF estadoActual IS NULL THEN
+        SET resultado = -1;
+    ELSE
+        IF estadoActual = 0 THEN
+            UPDATE COTIZACION 
+            SET estadoCotizacion = 1 
+            WHERE numeroCotizacion = numCotizacion;
+            
+            SET resultado = 0;
+        ELSE
+            SET resultado = 1;
+        END IF;
+    END IF;
+END $$
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE reabajarStock(IN codigoProducto VARCHAR(100), IN cantidadRebajar INT)
+BEGIN
+    UPDATE PRODUCTO
+    SET cantidadDisponible = cantidadDisponible - cantidadRebajar
+    WHERE identificadorProducto = codigoProducto;
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Producto no encontrado';
+    ELSE
+        SELECT 'Stock actualizado exitosamente' AS mensaje;
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE actualizarFactura(
+    IN p_identificadorFactura INT,
+    IN p_subtotal DOUBLE,
+    IN p_total DOUBLE
+)
+BEGIN
+    UPDATE FACTURA
+    SET subtotal = p_subtotal, total = p_total
+    WHERE identificadorFactura = p_identificadorFactura;
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Factura no encontrada';
+    ELSE
+        SELECT 'Factura actualizada exitosamente' AS mensaje;
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE agregarCliente(
+    IN p_numCedula INT,
+    IN p_nombre VARCHAR(100),
+    IN p_apellido VARCHAR(100),
+    OUT p_resultado INT,
+    OUT p_mensaje VARCHAR(255))
+BEGIN
+    DECLARE persona_existe INT;
+    DECLARE cliente_existe INT;
+    
+    SET p_resultado = 0;
+    SET p_mensaje = '';
+
+    SELECT COUNT(*) INTO persona_existe FROM PERSONA WHERE numCedula = p_numCedula;
+
+    IF persona_existe > 0 THEN
+        SELECT COUNT(*) INTO cliente_existe FROM CLIENTE WHERE cedulaCliente = p_numCedula;
+    ELSE
+        SET cliente_existe = 0;
+    END IF;
+
+    IF cliente_existe > 0 THEN
+        SET p_resultado = -1;
+        SET p_mensaje = 'Error: La persona ya está registrada como cliente';
+    ELSE
+
+        IF persona_existe = 0 THEN
+            INSERT INTO PERSONA(numCedula, nombre, apellido)
+            VALUES(p_numCedula, p_nombre, p_apellido);
+            
+            SET p_mensaje = CONCAT(p_mensaje, 'Persona agregada. ');
+        END IF;
+
+        INSERT INTO CLIENTE(cedulaCliente)
+        VALUES(p_numCedula);
+        
+        SET p_resultado = 1;
+        SET p_mensaje = CONCAT(p_mensaje, 'Cliente registrado exitosamente');
+    END IF;
+END$$
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS agregarFacturaCliente;
+DELIMITER $$
+
+CREATE PROCEDURE agregarFacturaCliente(
+    IN p_idCliente INT,
+    IN p_idFactura INT,
+    OUT p_resultado INT,
+    OUT p_mensaje VARCHAR(255))
+BEGIN
+    DECLARE cliente_existe INT;
+    DECLARE factura_existe INT;
+    DECLARE relacion_existe INT;
+
+    SET p_resultado = 0;
+    SET p_mensaje = '';
+    
+
+    SELECT COUNT(*) INTO cliente_existe FROM CLIENTE WHERE cedulaCliente = p_idCliente;
+    
+    SELECT COUNT(*) INTO factura_existe FROM FACTURA WHERE identificadorFactura = p_idFactura;
+    SELECT COUNT(*) INTO relacion_existe FROM cliente_factura 
+    WHERE idCliente = p_idCliente AND idFactura = p_idFactura;
+
+    IF cliente_existe = 0 THEN
+        SET p_resultado = -1;
+        SET p_mensaje = 'Error: El cliente no existe';
+    ELSEIF factura_existe = 0 THEN
+        SET p_resultado = -2;
+        SET p_mensaje = 'Error: La factura no existe';
+    ELSEIF relacion_existe > 0 THEN
+        SET p_resultado = -3;
+        SET p_mensaje = 'Error: Esta factura ya está asociada al cliente';
+    ELSE
+        INSERT INTO cliente_factura(idCliente, idFactura)
+        VALUES(p_idCliente, p_idFactura);
+        
+        SET p_resultado = 1;
+        SET p_mensaje = 'Factura asociada al cliente correctamente';
+    END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE eliminarFacturaSimple(IN p_idFactura INT)
+BEGIN
+    DELETE FROM cliente_factura WHERE idFactura = p_idFactura;
+    DELETE FROM FACTURA WHERE identificadorFactura = p_idFactura;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE CrearFactura()
+BEGIN
+    INSERT INTO FACTURA (fechaFacturado, subtotal, total)
+    VALUES (CURDATE(), 0, 0);
+    SELECT LAST_INSERT_ID() AS numeroFactura;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE guardarFacturaProducto(
+    IN p_idFactura INT,
+    IN p_identificadorProducto VARCHAR(100),
+    IN p_cantidad INT,
+    IN p_precioUnitario DOUBLE
+)
+BEGIN
+    INSERT INTO FACTURA_PRODUCTO (idFactura, identificadorProducto, cantidad, precioUnitario)
+    VALUES (p_idFactura, p_identificadorProducto, p_cantidad, p_precioUnitario);
+    IF ROW_COUNT() = 0 THEN
+
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error al guardar el detalle de la factura-producto';
+    ELSE
+        SELECT 'Detalle de factura-producto guardado exitosamente' AS mensaje;
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE obtenerDisponible(IN idProducto VARCHAR(100), OUT cantidadEnStock INT)
+BEGIN
+
+    SELECT cantidadDisponible
+    INTO cantidadEnStock
+    FROM PRODUCTO
+    WHERE identificadorProducto = idProducto;
+
+    
+    IF cantidadEnStock IS NULL THEN
+        SET cantidadEnStock = 0;
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE reabajarStock(IN codigoProducto VARCHAR(100), IN cantidadRebajar INT)
+BEGIN
+    DECLARE cantidadActual INT;
+    SELECT cantidadDisponible INTO cantidadActual
+    FROM PRODUCTO
+    WHERE identificadorProducto = codigoProducto;
+    IF cantidadActual < cantidadRebajar THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No hay suficiente stock para rebajar la cantidad solicitada';
+    ELSE
+        UPDATE PRODUCTO
+        SET cantidadDisponible = cantidadDisponible - cantidadRebajar
+        WHERE identificadorProducto = codigoProducto;
+        SELECT 'Stock actualizado exitosamente' AS mensaje;
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE removerProducto(
+    IN p_identificadorProducto VARCHAR(100)
+)
+BEGIN
+    DELETE FROM producto
+    WHERE identificadorProducto = p_identificadorProducto;
+END //
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE validarCredencialesAdmin(
+    IN p_nombreUsuario VARCHAR(100),
+    IN p_clave VARCHAR(50),
+    OUT p_resultado INT)
+BEGIN
+    DECLARE v_usuario_id INT;
+    DECLARE v_clave_correcta VARCHAR(50);
+
+    SELECT idUsuario INTO v_usuario_id 
+    FROM usuarioAdmin 
+    WHERE nombreUsuario = p_nombreUsuario;
+
+    IF v_usuario_id IS NOT NULL THEN
+        SELECT clave INTO v_clave_correcta
+        FROM contraseñaAdmin
+        WHERE idUsuario = v_usuario_id;
+        
+        IF v_clave_correcta = p_clave THEN
+            SET p_resultado = 1; 
+        ELSE
+            SET p_resultado = 0; 
+        END IF;
+    ELSE
+        SET p_resultado = 0; 
+    END IF;
+END$$
+
+DELIMITER ;
